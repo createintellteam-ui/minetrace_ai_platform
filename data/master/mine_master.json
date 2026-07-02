@@ -1,0 +1,67 @@
+{
+  "company": "Bharat Multi-Mineral Corporation Ltd",
+  "cin": "U14100OR2018PTC028741",
+  "lease_number": "ML/OD/2018/014",
+  "ibm_region": "Bhubaneswar",
+  "sites": [
+    {
+      "site_id": "SITE_A",
+      "name": "Keonjhar Iron Ore Block",
+      "location": "Keonjhar, Odisha",
+      "coordinates": {
+        "lat": 21.6289,
+        "lng": 85.5819
+      },
+      "mineral_primary": "Iron Ore",
+      "mineral_code": "Fe",
+      "pits": [
+        "PIT_A1",
+        "PIT_A2",
+        "PIT_A3",
+        "PIT_A4"
+      ],
+      "area_ha": 124.5,
+      "lease_valid_until": "2031-03-31",
+      "ec_granted": "2019-07-15"
+    },
+    {
+      "site_id": "SITE_B",
+      "name": "Sukinda Chrome Block",
+      "location": "Jajpur, Odisha",
+      "coordinates": {
+        "lat": 21.0012,
+        "lng": 85.7634
+      },
+      "mineral_primary": "Chrome Ore",
+      "mineral_code": "Cr",
+      "pits": [
+        "PIT_B1",
+        "PIT_B2",
+        "PIT_B3",
+        "PIT_B4",
+        "PIT_B5"
+      ],
+      "area_ha": 89.2,
+      "lease_valid_until": "2031-03-31",
+      "ec_granted": "2019-07-15"
+    },
+    {
+      "site_id": "SITE_C",
+      "name": "Bonai Manganese Block",
+      "location": "Sundargarh, Odisha",
+      "coordinates": {
+        "lat": 21.98,
+        "lng": 85.21
+      },
+      "mineral_primary": "Manganese Ore",
+      "mineral_code": "Mn",
+      "pits": [
+        "PIT_C1",
+        "PIT_C2"
+      ],
+      "area_ha": 62.8,
+      "lease_valid_until": "2031-03-31",
+      "ec_granted": "2019-07-15"
+    }
+  ]
+}

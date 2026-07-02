@@ -1,0 +1,45 @@
+[
+  {
+    "customer_id": "CUST001",
+    "name": "SAIL Bhilai Steel Plant",
+    "mineral_ordered": "Iron Ore",
+    "grade_specification": "Fe 62%+",
+    "monthly_volume_t": 45000,
+    "payment_terms_days": 30,
+    "contact": "procurement@sailbhilai.com"
+  },
+  {
+    "customer_id": "CUST002",
+    "name": "FACOR Ferro Alloys Nagpur",
+    "mineral_ordered": "Chrome Ore",
+    "grade_specification": "Cr2O3 50%+",
+    "monthly_volume_t": 12000,
+    "payment_terms_days": 45
+  },
+  {
+    "customer_id": "CUST003",
+    "name": "JSW Steel Ballari",
+    "mineral_ordered": "Iron Ore",
+    "grade_specification": "Fe 65%+",
+    "monthly_volume_t": 28000,
+    "payment_terms_days": 30,
+    "outstanding_amount": 11200000,
+    "overdue_days": 12
+  },
+  {
+    "customer_id": "CUST004",
+    "name": "Tata Steel Jamshedpur",
+    "mineral_ordered": "Iron Ore",
+    "grade_specification": "Fe 60%+",
+    "monthly_volume_t": 22000,
+    "payment_terms_days": 30
+  },
+  {
+    "customer_id": "CUST005",
+    "name": "MOIL Nagpur",
+    "mineral_ordered": "Manganese Ore",
+    "grade_specification": "Mn 35%+",
+    "monthly_volume_t": 9800,
+    "payment_terms_days": 30
+  }
+]

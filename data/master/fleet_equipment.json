@@ -1,0 +1,235 @@
+[
+  {
+    "equipment_id": "EX-01",
+    "type": "excavator",
+    "model": "Hitachi EX1200",
+    "site_id": "SITE_B",
+    "pit_assigned": "PIT_B2",
+    "engine_hours": 11996,
+    "health_score": 78
+  },
+  {
+    "equipment_id": "EX-02",
+    "type": "excavator",
+    "model": "Caterpillar 390F",
+    "site_id": "SITE_C",
+    "pit_assigned": "PIT_C1",
+    "engine_hours": 8642,
+    "health_score": 76
+  },
+  {
+    "equipment_id": "EX-03",
+    "type": "excavator",
+    "model": "Volvo EC950F",
+    "site_id": "SITE_A",
+    "pit_assigned": "PIT_A4",
+    "engine_hours": 14716,
+    "health_score": 65
+  },
+  {
+    "equipment_id": "EX-04",
+    "type": "excavator",
+    "model": "Komatsu PC1250",
+    "site_id": "SITE_B",
+    "pit_assigned": "PIT_B5",
+    "engine_hours": 18434,
+    "health_score": 83
+  },
+  {
+    "equipment_id": "EX-05",
+    "type": "excavator",
+    "model": "Hitachi EX1200",
+    "site_id": "SITE_C",
+    "pit_assigned": "PIT_C2",
+    "engine_hours": 7420,
+    "health_score": 90
+  },
+  {
+    "equipment_id": "EX-06",
+    "type": "excavator",
+    "model": "Caterpillar 390F",
+    "site_id": "SITE_A",
+    "pit_assigned": "PIT_A3",
+    "engine_hours": 4699,
+    "health_score": 92
+  },
+  {
+    "equipment_id": "EX-07",
+    "type": "excavator",
+    "model": "Volvo EC950F",
+    "site_id": "SITE_B",
+    "pit_assigned": "PIT_B3",
+    "engine_hours": 4190,
+    "health_score": 12
+  },
+  {
+    "equipment_id": "EX-08",
+    "type": "excavator",
+    "model": "Komatsu PC1250",
+    "site_id": "SITE_C",
+    "pit_assigned": "PIT_C1",
+    "engine_hours": 14492,
+    "health_score": 80
+  },
+  {
+    "equipment_id": "EX-09",
+    "type": "excavator",
+    "model": "Hitachi EX1200",
+    "site_id": "SITE_A",
+    "pit_assigned": "PIT_A2",
+    "engine_hours": 6975,
+    "health_score": 82
+  },
+  {
+    "equipment_id": "EX-10",
+    "type": "excavator",
+    "model": "Caterpillar 390F",
+    "site_id": "SITE_B",
+    "pit_assigned": "PIT_B1",
+    "engine_hours": 21568,
+    "health_score": 62
+  },
+  {
+    "equipment_id": "EX-11",
+    "type": "excavator",
+    "model": "Volvo EC950F",
+    "site_id": "SITE_C",
+    "pit_assigned": "PIT_C2",
+    "engine_hours": 5816,
+    "health_score": 90
+  },
+  {
+    "equipment_id": "EX-12",
+    "type": "excavator",
+    "model": "Komatsu PC1250",
+    "site_id": "SITE_A",
+    "pit_assigned": "PIT_A1",
+    "engine_hours": 4569,
+    "health_score": 62
+  },
+  {
+    "equipment_id": "DZ-01",
+    "type": "dozer",
+    "model": "Caterpillar D9T",
+    "site_id": "SITE_B",
+    "health_score": 44
+  },
+  {
+    "equipment_id": "DZ-02",
+    "type": "dozer",
+    "model": "Komatsu D375A",
+    "site_id": "SITE_C",
+    "health_score": 83
+  },
+  {
+    "equipment_id": "DZ-03",
+    "type": "dozer",
+    "model": "Caterpillar D9T",
+    "site_id": "SITE_A",
+    "health_score": 91
+  },
+  {
+    "equipment_id": "DZ-04",
+    "type": "dozer",
+    "model": "Komatsu D375A",
+    "site_id": "SITE_B",
+    "health_score": 81
+  },
+  {
+    "equipment_id": "DZ-05",
+    "type": "dozer",
+    "model": "Caterpillar D9T",
+    "site_id": "SITE_C",
+    "health_score": 82
+  },
+  {
+    "equipment_id": "DZ-06",
+    "type": "dozer",
+    "model": "Komatsu D375A",
+    "site_id": "SITE_A",
+    "health_score": 61
+  },
+  {
+    "equipment_id": "DZ-07",
+    "type": "dozer",
+    "model": "Caterpillar D9T",
+    "site_id": "SITE_B",
+    "health_score": 86
+  },
+  {
+    "equipment_id": "DZ-08",
+    "type": "dozer",
+    "model": "Komatsu D375A",
+    "site_id": "SITE_C",
+    "health_score": 61
+  },
+  {
+    "equipment_id": "DR-01",
+    "type": "drill_rig",
+    "model": "Atlas Copco DM45",
+    "site_id": "SITE_B"
+  },
+  {
+    "equipment_id": "DR-02",
+    "type": "drill_rig",
+    "model": "Sandvik DR580",
+    "site_id": "SITE_C"
+  },
+  {
+    "equipment_id": "DR-03",
+    "type": "drill_rig",
+    "model": "Atlas Copco DM45",
+    "site_id": "SITE_A"
+  },
+  {
+    "equipment_id": "DR-04",
+    "type": "drill_rig",
+    "model": "Sandvik DR580",
+    "site_id": "SITE_B"
+  },
+  {
+    "equipment_id": "CV-01",
+    "type": "conveyor",
+    "site_id": "SITE_A"
+  },
+  {
+    "equipment_id": "CV-02",
+    "type": "conveyor",
+    "site_id": "SITE_A"
+  },
+  {
+    "equipment_id": "GEN-01",
+    "type": "generator",
+    "site_id": "SITE_B"
+  },
+  {
+    "equipment_id": "GEN-02",
+    "type": "generator",
+    "site_id": "SITE_B"
+  },
+  {
+    "equipment_id": "GEN-03",
+    "type": "generator",
+    "site_id": "SITE_B"
+  },
+  {
+    "equipment_id": "WP-01",
+    "type": "water_pump",
+    "site_id": "SITE_C"
+  },
+  {
+    "equipment_id": "WP-02",
+    "type": "water_pump",
+    "site_id": "SITE_C"
+  },
+  {
+    "equipment_id": "FT-01",
+    "type": "fuel_tanker",
+    "site_id": "SITE_A"
+  },
+  {
+    "equipment_id": "FT-02",
+    "type": "fuel_tanker",
+    "site_id": "SITE_A"
+  }
+]

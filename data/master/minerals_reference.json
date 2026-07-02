@@ -1,0 +1,105 @@
+{
+  "Fe": {
+    "name": "Iron Ore",
+    "assay_field": "Fe",
+    "grade_bands": [
+      {
+        "band": "High",
+        "min_pct": 65.0,
+        "max_pct": 100.0,
+        "price_inr_per_tonne": 8200
+      },
+      {
+        "band": "Medium",
+        "min_pct": 60.0,
+        "max_pct": 65.0,
+        "price_inr_per_tonne": 5800
+      },
+      {
+        "band": "Low",
+        "min_pct": 55.0,
+        "max_pct": 60.0,
+        "price_inr_per_tonne": 3200
+      },
+      {
+        "band": "Reject",
+        "min_pct": 0.0,
+        "max_pct": 55.0,
+        "price_inr_per_tonne": 1400
+      }
+    ],
+    "royalty_rate_pct": 15.0,
+    "xrf_parameters": [
+      "Fe",
+      "SiO2",
+      "Al2O3",
+      "TiO2",
+      "P",
+      "S"
+    ]
+  },
+  "Cr": {
+    "name": "Chrome Ore",
+    "assay_field": "Cr2O3",
+    "grade_bands": [
+      {
+        "band": "High",
+        "min_pct": 52.0,
+        "max_pct": 100.0,
+        "price_inr_per_tonne": 6800
+      },
+      {
+        "band": "Medium",
+        "min_pct": 45.0,
+        "max_pct": 52.0,
+        "price_inr_per_tonne": 4200
+      },
+      {
+        "band": "Low",
+        "min_pct": 38.0,
+        "max_pct": 45.0,
+        "price_inr_per_tonne": 2100
+      }
+    ],
+    "royalty_rate_pct": 10.0,
+    "xrf_parameters": [
+      "Cr2O3",
+      "FeO",
+      "SiO2",
+      "Al2O3",
+      "MgO"
+    ]
+  },
+  "Mn": {
+    "name": "Manganese Ore",
+    "assay_field": "Mn",
+    "grade_bands": [
+      {
+        "band": "High",
+        "min_pct": 44.0,
+        "max_pct": 100.0,
+        "price_inr_per_tonne": 5400
+      },
+      {
+        "band": "Medium",
+        "min_pct": 35.0,
+        "max_pct": 44.0,
+        "price_inr_per_tonne": 3100
+      },
+      {
+        "band": "Low",
+        "min_pct": 25.0,
+        "max_pct": 35.0,
+        "price_inr_per_tonne": 1600
+      }
+    ],
+    "royalty_rate_pct": 14.0,
+    "xrf_parameters": [
+      "Mn",
+      "Fe",
+      "SiO2",
+      "Al2O3",
+      "P"
+    ]
+  }
+}
