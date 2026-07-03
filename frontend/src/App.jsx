@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Dashboard from './screens/Dashboard.jsx'
 import CommandCentre from './screens/CommandCentre.jsx'
 import EntryGate from './screens/EntryGate.jsx'
 import PitGrade from './screens/PitGrade.jsx'
@@ -19,14 +20,12 @@ import Blasting from './screens/Blasting.jsx'
 import Environment from './screens/Environment.jsx'
 import Finance from './screens/Finance.jsx'
 import Compliance from './screens/Compliance.jsx'
+import Documents from './screens/Documents.jsx'
 import Admin from './screens/Admin.jsx'
 
-// Check and apply theme preference
-if (typeof document !== 'undefined') {
-  document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light'
-}
-
+// Dynamic Screen Switcher mapping all 23 modules individually
 const SCREENS = {
+  dashboard: Dashboard,
   cmd: CommandCentre,
   gate: EntryGate,
   pit: PitGrade,
@@ -47,14 +46,16 @@ const SCREENS = {
   env: Environment,
   finance: Finance,
   comply: Compliance,
+  docs: Documents,
   admin: Admin,
 }
 
-// Navigation sections grouped by dashboard
-const DASHBOARD_1_NAV = [
+// 23 Standalone Navigation Items grouped under clean categories
+const SIDEBAR_NAV = [
   {
     section: 'Operations',
     items: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
       { id: 'cmd', label: 'Command Centre', icon: 'cmd' },
       { id: 'gate', label: 'Entry Gate AI Vision', icon: 'gate', badge: 'LIVE', badgeType: 'w' },
       { id: 'pit', label: 'Pit and Grade AI', icon: 'pit', badge: '3', badgeType: 'w' },
@@ -65,21 +66,18 @@ const DASHBOARD_1_NAV = [
     ]
   },
   {
-    section: 'People',
+    section: 'People & Assets',
     items: [
       { id: 'workers', label: 'Workers and Staff', icon: 'workers' },
       { id: 'mach', label: 'Machinery & Equipment', icon: 'mach', badge: '1', badgeType: 'r' },
     ]
-  }
-]
-
-const DASHBOARD_2_NAV = [
+  },
   {
     section: 'Intelligence',
     items: [
       { id: 'ai', label: 'AI Advisor', icon: 'ai' },
       { id: 'predict', label: 'Predictive Analytics', icon: 'predict' },
-      { id: 'anomaly', label: 'Anomaly Detection', icon: 'anomaly', badge: '2', badgeType: 'r' },
+      { id: 'anomaly', label: 'Anomaly Detection', icon: 'anomaly', badge: '7', badgeType: 'r' },
       { id: 'leak', label: 'Revenue Leakage', icon: 'leak' },
       { id: 'shift', label: 'Shift Intelligence', icon: 'shift' },
       { id: 'maint', label: 'Predictive Maint.', icon: 'maint', badge: '3', badgeType: 'w' },
@@ -94,17 +92,19 @@ const DASHBOARD_2_NAV = [
     ]
   },
   {
-    section: 'Business',
+    section: 'Business & Settings',
     items: [
       { id: 'finance', label: 'Finance and Royalty', icon: 'finance' },
       { id: 'comply', label: 'Compliance & Regs', icon: 'comply', badge: '2', badgeType: 'r' },
-      { id: 'admin', label: 'Admin and Settings', icon: 'admin' },
+      { id: 'docs', label: 'Documents', icon: 'reports' },
+      { id: 'admin', label: 'Admin and Settings', icon: 'settings' },
     ]
   }
 ]
 
-// Simple SVG Icons map
+// Lucide SVG Icons Map
 const ICON_COMPONENTS = {
+  dashboard: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>,
   cmd: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V18ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18" /></svg>,
   gate: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>,
   pit: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v18M3 12h18M12 3l4 4M12 3L8 7M12 21l4-4M12 21l-4-4" /></svg>,
@@ -125,12 +125,12 @@ const ICON_COMPONENTS = {
   env: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12M12 6a6 6 0 0 1 6 6" /></svg>,
   finance: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M12 10v4M8 12h8" /></svg>,
   comply: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>,
-  admin: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
+  reports: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+  settings: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
 }
 
 function Clock() {
   const [timeStr, setTimeStr] = useState('')
-  
   useEffect(() => {
     const updateTime = () => {
       const n = new Date();
@@ -147,318 +147,345 @@ function Clock() {
 }
 
 export default function App() {
-  const [activeDashboard, setActiveDashboard] = useState(1);
-  const [activeModule, setActiveModule] = useState('cmd');
-  const [aiInputValue, setAiInputValue] = useState('');
-  const [theme, setTheme] = useState('light');
-  
-  // Custom dialog log for the AI advisor drill-down simulator
+  const [activeModule, setActiveModule] = useState('dashboard')
+  const [aiInputValue, setAiInputValue] = useState('')
+  const [theme, setTheme] = useState('light')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeMine, setActiveMine] = useState('ALL')
+  const [showNotifications, setShowNotifications] = useState(false)
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: 'MineOS AI Advisor ready. Ask anything about live data across Keonjhar (Fe), Sukinda (Cr), Koraput (Mn), Kodingamali (Al), and Pokhari (Li).'
+      text: 'MineOS AI Intelligence Advisor ready. Ask anything about production, geofencing discrepancies, or equipment prognoses.'
     }
-  ]);
+  ])
 
-  // Hook global prompt sender
   useEffect(() => {
     window.sendPrompt = (text) => {
-      // Intercept dashboard toggle prompts
-      if (text.includes('Show Dashboard 2')) {
-        setActiveDashboard(2);
-        setActiveModule('ai');
-        return;
-      }
-      if (text.includes('Show Dashboard 1')) {
-        setActiveDashboard(1);
-        setActiveModule('cmd');
-        return;
-      }
-
-      // Record User Message
-      setMessages(prev => [...prev, { role: 'user', text }]);
-      setActiveModule('ai'); // Always switch to AI Advisor module to show the drilldown details!
+      setMessages(prev => [...prev, { role: 'user', text }])
+      setActiveModule('ai') // Switch to AI Advisor to see answers
       
-      // Simulate clever AI intelligence based on the prompt
-      let response = "Analyzing query. Here are the live mine insights:\n";
-      const q = text.toLowerCase();
+      let response = "Analyzing query. Here are the live mine insights:\n"
+      const q = text.toLowerCase()
       
-      if (q.includes('keonjhar') && (q.includes('production') || q.includes('grade') || q.includes('iron'))) {
-        response = `[OMC DRILL-DOWN] Keonjhar (Fe) Iron Ore Operations:
-        • ROM Production: 3,840T (91% of target)
-        • Lab Grade (LIMS): 62.4% Fe Fe (High Grade)
-        • AI Camera Accuracy: 94% vs LIMS grade checks
-        • Crusher Output: Jaw crusher active at 1,240 T/hr
-        • Weight reconciliation: -3% loss (-119T) reported at crusher discharge. Contamination risk: Low.`;
-      } else if (q.includes('sukinda') || q.includes('chrome') || q.includes('dms')) {
-        response = `[OMC DRILL-DOWN] Sukinda (Cr) Chrome Ore Operations:
-        • ROM Production: 1,960T (78% of target)
-        • DMS Grade Uplift: ROM 42% Cr₂O₃ concentrates successfully to 52% Cr₂O₃ grade.
-        • Gangue Removal Loss: -38% weight reduction expected, value increased by +₹2,600/T.
-        • Offline Asset alert: EX-07 Hitachi shovel is offline due to hydraulic cylinder fail (Health score: 12/100).`;
-      } else if (q.includes('optimise') || q.includes('route') || q.includes('routing')) {
-        response = `[OMC DYNAMIC ROUTING ENGINE] Optimizing routing across 5 sites:
-        • Keonjhar: Queue at Weighbridge-1 heavy. Redirecting 4 dumpers to Weighbridge-2.
-        • Sukinda: EX-07 offline. Re-routing spare dumpers OD12 and OD14 to stockpile haulage.
-        • Geofence correction: Rerouting OD17 chrome truck back to correct Zone D, preventing Fe contamination at Stockyard Zone C.`;
-      } else if (q.includes('dz-01') || q.includes('pressure') || q.includes('maintenance')) {
-        response = `[PREDICTIVE MAINTENANCE REPORT] DZ-01 (Caterpillar D9T Crawler - Keonjhar):
-        • Prognosis: Fuel rate anomalies and engine oil pressure drop (-18%). Failure predicted in 72-96 hrs.
-        • Sensor data: Oil Temp 102°C, Vibration +23% over baseline.
-        • Financial recommendation: Repair now (cost: ₹45,000) vs Ignore failure (breakdown loss: ₹4.04 Lakhs).`;
-      } else if (q.includes('weight loss') || q.includes('od09') || q.includes('raju')) {
-        response = `[ANOMALY SYSTEM ALERT] Driver Raju Kumar (OD09AB4421 - Keonjhar):
-        • Pattern Flagged: 5 consecutive weight losses between Pit A3 and stockyard.
-        • Tonnage lost: Average 3.8T loss per trip during 10:00–11:30 shift window.
-        • Audit Status: OTP release required from mine manager. Manager override logged to system.`;
-      } else if (q.includes('blast') || q.includes('checklist')) {
-        response = `[OMC SAFETY CHECKS] Keonjhar Pit A3 Blast countdown:
-        • Checklist status: 4/6 completed.
-        • Clear: Workers evacuated (GPS checked), Security cordon established (300m), Village alert.
-        • Pending: Shot firer physical check, explosives weight verification logs.`;
-      } else if (q.includes('royalty') || q.includes('ibm') || q.includes('compliance')) {
-        response = `[REGULATORY FILING TASK] OMC Compliance Status:
-        • IBM Monthly Production Return: Due in 6 days (15 July 2026).
-        • Royalty payment: Outstanding amount ₹84.2 Lakhs due in 8 days to Govt. of Odisha.
-        • Digital Challans: 312 challans verified by sales weighbridge exit gate ANPR.`;
-      } else if (q.includes('leakage') || q.includes('dilution') || q.includes('contamination')) {
+      if (q.includes('production') || q.includes('tonnes') || q.includes('mined')) {
+        response = `[OMC DRILL-DOWN] Production stats compiled:
+        • ROM Production: 9,240T (88% of target)
+        • Iron (Keonjhar): 3,840T (91% target, 62.4% Fe)
+        • Chrome (Sukinda): 1,960T (78% target, 51.2% Cr2O3)
+        • Manganese (Koraput): 1,440T (88% target, 38.7% Mn)
+        • Bauxite (Kodingamali): 1,200T (92% target, 52.3% Al)
+        • Limestone (Pokhari): 800T (89% target, 94.1% CaCO3)`
+      } else if (q.includes('crusher') || q.includes('leakage') || q.includes('loss')) {
         response = `[REVENUE INTELLIGENCE] Monthly Revenue Leakage analysis:
-        • Total leakage: ₹1.84 Crores.
-        • Key source: Grade dilution (46% - ₹84.2L) at Stockyard Zone C due to wrong-zone dumping.
-        • Transit loss: ₹62.4L weight losses. Recoverable value: ₹62.6L.`;
+        • Total transit loss: ₹1.84 Crores (34,220T)
+        • Key source: Crusher→Stockyard loss (-18.58%) at Sukinda and Keonjhar crusher discharge points
+        • Contamination risk: High at Stockyard Zone C due to chrome trucks routing errors.`
+      } else if (q.includes('truck') || q.includes('fleet') || q.includes('route') || q.includes('od09')) {
+        response = `[FLEET ROUTING INSIGHT] Truck OD09AB4421 Anomaly:
+        • Issue: 5 consecutive weight losses between Pit A3 and Keonjhar stockyard.
+        • Total lost volume: 17T this week during the morning shift (10:00–11:30).
+        • Recommendation: Route inspection logged. OTP release lock active on operator console.`
+      } else if (q.includes('maintenance') || q.includes('dz-01') || q.includes('failure')) {
+        response = `[PREDICTIVE MAINTENANCE REPORT] Caterpillar D9T Crawler (DZ-01):
+        • Diagnosis: Oil pressure drop (-18%) and fuel rate anomaly (+12%).
+        • Risk Level: 67% failure probability within 72-96 hrs.
+        • Recommendation: Immediate replacement of engine seals. Estimated cost: ₹45,000.`
+      } else if (q.includes('blast') || q.includes('safety') || q.includes('evacuate')) {
+        response = `[OMC SAFETY INTELLIGENCE] Keonjhar Pit A3 blast countdown:
+        • Checklist: 4/6 completed.
+        • Verified: Worker evacuation (GPS checks completed), 300m safety cordon established.
+        • Pending: Final shot firer ignition credentials audit.`
       } else {
-        response = `[AI OS RESPONSE] Received prompt: "${text}".
-        Query verified across MineOS RAG indexes.
-        Site-wide telemetry is active. All 5 minerals (Fe, Cr, Mn, Al, CaCO3) comply with SPCB environmental sensors. PM2.5 at 142µg/m³ (limit 150) at Keonjhar.`;
+        response = `[AI INSIGHT] Telemetry indexes queried. Standard SPCB dust level active (PM2.5: 142 ug/m3). Leases valid through 2031. Digital challans cleared.`
       }
-      
-      // Delay response slightly to feel natural
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', text: response }]);
-      }, 750);
-    };
-  }, []);
 
-  // Update theme helper
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'assistant', text: response }])
+      }, 750)
+    }
+  }, [])
+
   const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = nextTheme;
-    localStorage.setItem('theme', nextTheme);
-    setTheme(nextTheme);
-  };
+    const nextTheme = theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = nextTheme
+    localStorage.setItem('theme', nextTheme)
+    setTheme(nextTheme)
+  }
 
   const handleAsk = () => {
     if (aiInputValue.trim()) {
-      window.sendPrompt(aiInputValue.trim());
-      setAiInputValue('');
+      window.sendPrompt(aiInputValue.trim())
+      setAiInputValue('')
     }
-  };
+  }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleAsk();
-    }
-  };
+    if (e.key === 'Enter') handleAsk()
+  }
 
-  // Nav list based on active dashboard
-  const currentNav = activeDashboard === 1 ? DASHBOARD_1_NAV : DASHBOARD_2_NAV;
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+  }
+
+  const CurrentScreen = SCREENS[activeModule] || Dashboard
 
   return (
-    <div className={`shell ${activeDashboard === 1 ? 'd1' : 'd2'}`}>
-      
-      {/* TOP BAR */}
+    <div className="shell d1">
+      {/* TOP NAVBAR */}
       <header className="topbar">
         <div className="topbar-left">
           <div className="brand-logo">
             <span className="brand-dot" />
             <span>MineOS</span>
           </div>
-          <div className="company-pill">
-            <svg style={{ width: 10, height: 10 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+
+          {/* Mine Selector Dropdown */}
+          <div className="company-pill" style={{ position: 'relative', cursor: 'pointer' }}>
+            <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M3 21h18M3 7V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M5 21V7m14 14V7m-7 14v-8" />
             </svg>
-            <span>OMC · Bharat Multi-Mineral</span>
+            <select 
+              value={activeMine} 
+              onChange={e => {
+                setActiveMine(e.target.value)
+                window.sendPrompt(`Display stats for ${e.target.value === 'ALL' ? 'all 5 sites' : e.target.value}`)
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none',
+                marginLeft: 4
+              }}
+            >
+              <option value="ALL">All Mines (Fe/Cr/Mn/Al/Li)</option>
+              <option value="KEONJHAR">Keonjhar (Iron Ore)</option>
+              <option value="SUKINDA">Sukinda (Chrome Ore)</option>
+              <option value="KORAPUT">Koraput (Manganese)</option>
+              <option value="KODINGAMALI">Kodingamali (Bauxite)</option>
+              <option value="POKHARI">Pokhari (Limestone)</option>
+            </select>
           </div>
+
           <div className="live-indicator">
             <span className="live-dot" />
-            <span>Live · 5 sites</span>
+            <span>Live · Telemetry Connected</span>
           </div>
         </div>
 
+        {/* Global Search & System Controls */}
         <div className="topbar-right">
-          {/* Dashboard Navigation Pill */}
-          {activeDashboard === 1 ? (
-            <div 
-              className="dashboard-toggle-pill"
-              onClick={() => window.sendPrompt('Show Dashboard 2 with Intelligence, Safety and Business modules')}
-            >
-              Operations and People → Intelligence and Business ↗
-            </div>
-          ) : (
-            <div 
-              className="dashboard-toggle-pill"
-              onClick={() => window.sendPrompt('Show Dashboard 1 with Operations and People modules')}
-            >
-              ← Operations and People
-            </div>
-          )}
+          {/* Global Search Input */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Search platform modules..." 
+              value={searchQuery}
+              onChange={handleSearchChange}
+              style={{
+                width: 200,
+                fontSize: 14,
+                padding: '4px 8px 4px 28px',
+                borderRadius: 8,
+                border: '0.5px solid var(--border)',
+                background: 'var(--surface-0)'
+              }}
+            />
+            <svg style={{ width: 12, height: 12, position: 'absolute', left: 8, color: 'var(--text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+          </div>
 
           {/* Theme switcher */}
           <button className="icon-button" onClick={toggleTheme} title="Toggle theme">
             {theme === 'dark' ? (
-              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </svg>
             ) : (
-              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             )}
           </button>
 
-          {/* IoT health status plug icon */}
-          <button className="icon-button" title="IoT Network Health">
-            <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" />
-            </svg>
-          </button>
-
-          {/* Notification bell */}
-          <div className="bell-icon-wrapper">
-            <button className="icon-button" title="Notifications">
-              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {/* Notification bell and drawer */}
+          <div className="bell-icon-wrapper" style={{ position: 'relative' }}>
+            <button className="icon-button" onClick={() => setShowNotifications(!showNotifications)} title="Notifications">
+              <svg style={{ width: 14, height: 14 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </button>
             <span className="bell-pip" />
+            
+            {showNotifications && (
+              <div style={{
+                position: 'absolute',
+                top: 40,
+                right: 0,
+                width: 280,
+                background: 'var(--surface-1)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                zIndex: 100,
+                padding: 12
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 700, borderBottom: '0.5px solid var(--border)', paddingBottom: 8, marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Unread Notifications</span>
+                  <span className="pill al" style={{ fontSize: 13, padding: '1px 6px' }}>3 New</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontSize: 13, borderBottom: '0.5px solid var(--border)', paddingBottom: 6 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-danger)' }}>Weight loss alert</span>
+                    <p style={{ color: 'var(--text-secondary)' }}>OD09 reported -3.8T loss at Keonjhar</p>
+                  </div>
+                  <div style={{ fontSize: 13, borderBottom: '0.5px solid var(--border)', paddingBottom: 6 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-warning)' }}>Wrong Zone Entry</span>
+                    <p style={{ color: 'var(--text-secondary)' }}>OD17 entered Zone C (Cr contamination)</p>
+                  </div>
+                  <div style={{ fontSize: 13 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-accent)' }}>Compliance compilation</span>
+                    <p style={{ color: 'var(--text-secondary)' }}>IBM production returns due in 6 days</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <Clock />
-          
           <div className="avatar-circle">OM</div>
         </div>
       </header>
 
-      {/* LEFT NAVIGATION SIDEBAR */}
-      <aside className="sidebar">
-        {currentNav.map((sec, idx) => (
-          <div key={idx} className="nav-section">
-            <div className="section-label">{sec.section}</div>
-            {sec.items.map((it) => (
-              <div
-                key={it.id}
-                className={`ni ${activeModule === it.id ? 'on' : ''}`}
-                onClick={() => setActiveModule(it.id)}
-              >
-                <div className="ni-label-container">
-                  {ICON_COMPONENTS[it.icon] || null}
-                  <span>{it.label}</span>
+      {/* LEFT PERSISTENT SIDEBAR */}
+      <aside className="sidebar" style={{ maxHeight: 'calc(100vh - 60px)', overflowY: 'auto' }}>
+        {SIDEBAR_NAV.map((sec, secIdx) => {
+          // Filter section items based on search query
+          const filteredItems = sec.items.filter(it => 
+            it.label.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          if (filteredItems.length === 0) return null
+
+          return (
+            <div key={secIdx} className="nav-section">
+              <div className="section-label">{sec.section}</div>
+              {filteredItems.map((it) => (
+                <div
+                  key={it.id}
+                  className={`ni ${activeModule === it.id ? 'on' : ''}`}
+                  onClick={() => setActiveModule(it.id)}
+                >
+                  <div className="ni-label-container">
+                    {ICON_COMPONENTS[it.icon] || null}
+                    <span>{it.label}</span>
+                  </div>
+                  {it.badge && (
+                    <span className={`nb ${it.badgeType === 'r' ? 'r' : 'w'}`}>
+                      {it.badge}
+                    </span>
+                  )}
                 </div>
-                {it.badge && (
-                  <span className={`nb ${it.badgeType === 'r' ? 'r' : 'w'}`}>
-                    {it.badge}
-                  </span>
-                )}
+              ))}
+            </div>
+          )
+        })}
+      </aside>
+
+      {/* MAIN SCREEN INTERACTION ZONE */}
+      <main className="main-content">
+        <div className="module-container on">
+          <CurrentScreen messages={messages} setMessages={setMessages} />
+        </div>
+      </main>
+
+      {/* RIGHT PANEL: AI INTEL ADVISOR DRAWER */}
+      <aside className="right-sidebar">
+        <div>
+          <div className="right-section-title">Compliance Radar</div>
+          <div className="radar-list">
+            {[
+              { name: 'IBM return', sub: '6 days remaining', days: '6d', urgency: 'red', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+              { name: 'Royalty ₹84.2L', sub: 'Odisha Govt', days: '8d', urgency: 'red', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+              { name: '8 truck certs', sub: 'Fitness expiring', days: '11d', urgency: 'amber', icon: 'M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v10h1' },
+              { name: '14 worker certs', sub: 'Safety refresh', days: '30d', urgency: 'amber', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+              { name: 'EC monitoring', sub: 'Submitted Jun 30', days: 'Done', urgency: 'green', icon: 'M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12' },
+            ].map((item, i) => (
+              <div 
+                key={i} 
+                className="radar-item"
+                onClick={() => window.sendPrompt(`Show compliance status for ${item.name}`)}
+              >
+                <div className="radar-item-left">
+                  <div className={`radar-icon-box ${item.urgency}`}>
+                    <svg style={{ width: 10, height: 10 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d={item.icon} />
+                    </svg>
+                  </div>
+                  <div className="radar-info">
+                    <span className="radar-name">{item.name}</span>
+                    <span className="radar-sub" style={{ fontSize: 13 }}>{item.sub}</span>
+                  </div>
+                </div>
+                <span className={`radar-days ${item.urgency}`} style={{ fontSize: 13 }}>{item.days}</span>
               </div>
             ))}
           </div>
-        ))}
+        </div>
+
+        {/* AI Advisor Panel */}
+        <div className="ai-advisor-panel" style={{ marginTop: 'auto' }}>
+          <div className="ai-advisor-header">
+            <span className="live-dot" />
+            <span>AI Advisor · Active</span>
+          </div>
+          
+          <div className="ai-insight-box">
+            <strong>System Alerts:</strong>
+            <div style={{ marginTop: 4, fontSize: 14 }}>1. OD09 — -3.8T weight loss at crusher</div>
+            <div style={{ fontSize: 14 }}>2. DZ-01 — Crawler fail prognosis (67%)</div>
+            <div style={{ fontSize: 14 }}>3. Sukinda — Chrome dilution risk</div>
+          </div>
+
+          <div className="ai-quick-chips">
+            {[
+              { label: 'All production', prompt: 'Show production details for all 5 sites' },
+              { label: 'Crusher losses', prompt: 'Analyze crusher weight losses and recovery' },
+              { label: 'Failure predict', prompt: 'Show machinery maintenance and failure predictions' },
+              { label: 'Wrong-zone alert', prompt: 'Report wrong zone safety alerts' }
+            ].map((chip, idx) => (
+              <span 
+                key={idx} 
+                className="quick-chip"
+                onClick={() => window.sendPrompt(chip.prompt)}
+                style={{ fontSize: 13 }}
+              >
+                {chip.label}
+              </span>
+            ))}
+          </div>
+
+          <div className="ai-input-row">
+            <input
+              type="text"
+              className="input-field ai-input"
+              placeholder="Ask operations..."
+              value={aiInputValue}
+              onChange={e => setAiInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              id="aiq2"
+              style={{ fontSize: 14 }}
+            />
+            <button className="ai-send-btn" onClick={handleAsk} style={{ fontSize: 14 }}>Send</button>
+          </div>
+        </div>
       </aside>
-
-      {/* MIDDLE CONTENT AREA */}
-      <main className="main-content">
-        {Object.entries(SCREENS).map(([id, Component]) => (
-          <div key={id} className={`module-container ${activeModule === id ? 'on' : ''}`}>
-            <Component messages={messages} setMessages={setMessages} />
-          </div>
-        ))}
-      </main>
-
-      {/* RIGHT COLUMN (Operations dashboard 1 only) */}
-      {activeDashboard === 1 && (
-        <aside className="right-sidebar">
-          <div>
-            <div className="right-section-title">Compliance Radar</div>
-            <div className="radar-list">
-              {[
-                { name: 'IBM return', sub: '6 days remaining', days: '6d', urgency: 'red', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
-                { name: 'Royalty ₹84.2L', sub: 'Odisha Govt', days: '8d', urgency: 'red', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
-                { name: '8 truck certs', sub: 'Fitness expiring', days: '11d', urgency: 'amber', icon: 'M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v10h1' },
-                { name: '14 worker certs', sub: 'Safety refresh', days: '30d', urgency: 'amber', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
-                { name: 'EC monitoring', sub: 'Submitted Jun 30', days: 'Done', urgency: 'green', icon: 'M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12' },
-                { name: 'All 5 leases', sub: 'Valid to 2031', days: 'Valid', urgency: 'green', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
-              ].map((item, i) => (
-                <div 
-                  key={i} 
-                  className="radar-item"
-                  onClick={() => window.sendPrompt(`Show compliance status for ${item.name}`)}
-                >
-                  <div className="radar-item-left">
-                    <div className={`radar-icon-box ${item.urgency}`}>
-                      <svg style={{ width: 10, height: 10 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d={item.icon} />
-                      </svg>
-                    </div>
-                    <div className="radar-info">
-                      <span className="radar-name">{item.name}</span>
-                      <span className="radar-sub">{item.sub}</span>
-                    </div>
-                  </div>
-                  <span className={`radar-days ${item.urgency}`}>{item.days}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Advisor Panel */}
-          <div className="ai-advisor-panel">
-            <div className="ai-advisor-header">
-              <span className="live-dot" />
-              <span>AI Advisor · All 5 sites</span>
-            </div>
-            
-            <div className="ai-insight-box">
-              <strong>Priority actions now:</strong>
-              <div style={{ marginTop: 3 }}>1. OD09 — 5 consecutive weight losses</div>
-              <div>2. DZ-01 — 67% failure (repair: ₹45K)</div>
-              <div>3. IBM return — due in 6 days</div>
-              <div>4. Blast — Pit A3 check (4/6 ready)</div>
-            </div>
-
-            <div className="ai-quick-chips">
-              {[
-                { label: 'All sites production', prompt: 'Show production details for all 5 sites' },
-                { label: 'Crusher losses', prompt: 'Analyze crusher weight losses and gangue removal' },
-                { label: 'IBM return', prompt: 'Compile return data for IBM monthly production return' },
-                { label: 'Grade risk', prompt: 'Report grade contamination and wrong zone alerts' },
-                { label: 'Recovery plan', prompt: 'Show revenue recovery plan for night shift gaps' }
-              ].map((chip, idx) => (
-                <span 
-                  key={idx} 
-                  className="quick-chip"
-                  onClick={() => window.sendPrompt(chip.prompt)}
-                >
-                  {chip.label}
-                </span>
-              ))}
-            </div>
-
-            <div className="ai-input-row">
-              <input
-                type="text"
-                className="input-field ai-input"
-                placeholder="Ask operations..."
-                value={aiInputValue}
-                onChange={e => setAiInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                id="aiq2"
-              />
-              <button className="ai-send-btn" onClick={handleAsk}>Send</button>
-            </div>
-          </div>
-        </aside>
-      )}
-
     </div>
   )
 }

@@ -105,3 +105,5 @@ body { font-family: var(--font-sans); background: var(--surface-2); color: var(-
 .placeholder code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; color: var(--text-accent); }
 .loading { color: var(--text-muted); padding: 40px 0; text-align: center; }
 .recharts-wrapper { font-size: 11px; }
+.kpi-icon { width: 18px; height: 18px; margin-bottom: 6px; color: var(--text-muted); }
+
