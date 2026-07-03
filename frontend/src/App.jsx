@@ -19,236 +19,446 @@ import Blasting from './screens/Blasting.jsx'
 import Environment from './screens/Environment.jsx'
 import Finance from './screens/Finance.jsx'
 import Compliance from './screens/Compliance.jsx'
-import Documents from './screens/Documents.jsx'
 import Admin from './screens/Admin.jsx'
 
-// Apply saved theme before first render (default: light). No flash.
+// Check and apply theme preference
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light'
 }
 
 const SCREENS = {
-  cmd: CommandCentre, gate: EntryGate, pit: PitGrade, fleet: Fleet,
-  weigh: Weighbridge, yard: Stockyard, dispatch: Dispatch,
-  workers: Workers, mach: Machinery,
-  ai: AIAdvisor, predict: Predict, anomaly: Anomaly, leak: Leakage,
-  shift: Shift, maint: Maint,
-  iot: Sensors, blast: Blasting, env: Environment,
-  finance: Finance, comply: Compliance, docs: Documents, admin: Admin,
+  cmd: CommandCentre,
+  gate: EntryGate,
+  pit: PitGrade,
+  fleet: Fleet,
+  weigh: Weighbridge,
+  yard: Stockyard,
+  dispatch: Dispatch,
+  workers: Workers,
+  mach: Machinery,
+  ai: AIAdvisor,
+  predict: Predict,
+  anomaly: Anomaly,
+  leak: Leakage,
+  shift: Shift,
+  maint: Maint,
+  iot: Sensors,
+  blast: Blasting,
+  env: Environment,
+  finance: Finance,
+  comply: Compliance,
+  admin: Admin,
 }
 
-const NAV = [
-  { section: 'Operations', items: [
-    { id: 'cmd', label: 'Command centre' },
-    { id: 'gate', label: 'Entry gate AI', badge: 'LIVE' },
-    { id: 'pit', label: 'Pit & grade AI', badge: '3' },
-    { id: 'fleet', label: 'Fleet tracking', badge: '1' },
-    { id: 'weigh', label: 'Weighbridge' },
-    { id: 'yard', label: 'Stockyard', badge: '2' },
-    { id: 'dispatch', label: 'Dispatch & challan' },
-  ]},
-  { section: 'People & assets', items: [
-    { id: 'workers', label: 'Workers & staff' },
-    { id: 'mach', label: 'Machinery' },
-  ]},
-  { section: 'Intelligence', items: [
-    { id: 'ai', label: 'AI advisor' },
-    { id: 'predict', label: 'Predictive analytics' },
-    { id: 'anomaly', label: 'Anomaly detection', badge: '7' },
-    { id: 'leak', label: 'Revenue leakage' },
-    { id: 'shift', label: 'Shift intelligence' },
-    { id: 'maint', label: 'Predictive maint.' },
-  ]},
-  { section: 'Safety & environment', items: [
-    { id: 'iot', label: 'Sensors & IoT' },
-    { id: 'blast', label: 'Blasting', badge: '38m' },
-    { id: 'env', label: 'Environment', badge: '2' },
-  ]},
-  { section: 'Business', items: [
-    { id: 'finance', label: 'Finance & royalty' },
-    { id: 'comply', label: 'Compliance', badge: '2' },
-    { id: 'docs', label: 'Documents' },
-    { id: 'admin', label: 'Admin & settings' },
-  ]},
+// Navigation sections grouped by dashboard
+const DASHBOARD_1_NAV = [
+  {
+    section: 'Operations',
+    items: [
+      { id: 'cmd', label: 'Command Centre', icon: 'cmd' },
+      { id: 'gate', label: 'Entry Gate AI Vision', icon: 'gate', badge: 'LIVE', badgeType: 'w' },
+      { id: 'pit', label: 'Pit and Grade AI', icon: 'pit', badge: '3', badgeType: 'w' },
+      { id: 'fleet', label: 'Fleet Tracking', icon: 'fleet', badge: '1', badgeType: 'r' },
+      { id: 'weigh', label: 'Weighbridge & Recon', icon: 'weigh' },
+      { id: 'yard', label: 'Stockyard Management', icon: 'yard', badge: '2', badgeType: 'w' },
+      { id: 'dispatch', label: 'Dispatch and Challan', icon: 'dispatch' },
+    ]
+  },
+  {
+    section: 'People',
+    items: [
+      { id: 'workers', label: 'Workers and Staff', icon: 'workers' },
+      { id: 'mach', label: 'Machinery & Equipment', icon: 'mach', badge: '1', badgeType: 'r' },
+    ]
+  }
 ]
 
-const ICONS = {
-  cmd: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V18ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18" />
-    </svg>
-  ),
-  gate: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-    </svg>
-  ),
-  pit: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 1.332-7.257 3 3 0 0 0-3.758-3.848 5.25 5.25 0 0 0-10.233 2.33A4.502 4.502 0 0 0 2.25 15Z" />
-    </svg>
-  ),
-  fleet: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8m-9-9h12a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 16.5v-9A1.5 1.5 0 0 1 6 6.75Z" />
-    </svg>
-  ),
-  weigh: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m0-18 4 4m-4-4L8 7m4 13.25l4-4m-4 4-4-4" />
-    </svg>
-  ),
-  yard: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-    </svg>
-  ),
-  dispatch: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-    </svg>
-  ),
-  workers: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-    </svg>
-  ),
-  mach: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.831a1.125 1.125 0 0 1 .26 1.43l-1.297 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.83c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-  ),
-  ai: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21l-.813-5.096L3.096 15 8 14.187 8.813 9.096 9.813 14.187 14.904 15 9.813 15.904ZM18.25 5.25L17.5 9l-.75-3.75L13 4.5l3.75-.75.75-3.75.75 3.75 3.75.75-3.75.75ZM14.25 18l-.5 2.5-.5-2.5-2.5-.5 2.5-.5.5-2.5.5 2.5 2.5.5-2.5.5Z" />
-    </svg>
-  ),
-  predict: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-    </svg>
-  ),
-  anomaly: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-    </svg>
-  ),
-  leak: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  ),
-  shift: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  ),
-  maint: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.653 2.653 0 1 0 21 17.25l-5.83-5.83m0 0a2.95 2.95 0 1 1-4.17-4.17 2.95 2.95 0 0 1 4.17 4.17Zm0 0l-5.83 5.83m0 0l-3.75-3.75M3 12a9 9 0 0 1 9-9 9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9Z" />
-    </svg>
-  ),
-  iot: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856a9 9 0 0 1 13.788 0m-16.608-3.18a12.75 12.75 0 0 1 19.425 0M12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-    </svg>
-  ),
-  blast: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.467 5.99 5.99 0 0 0-1.925 3.546 5.974 5.974 0 0 1-2.133-1A3.75 3.75 0 0 0 12 18Z" />
-    </svg>
-  ),
-  env: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v13.5M3 16.5a9 9 0 0 0 18 0M3 16.5c0-4.97 4.03-9 9-9s9 4.03 9 9m-9-9a9 9 0 0 0 9-9" />
-    </svg>
-  ),
-  finance: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h13.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  ),
-  comply: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75l2.25 2.25 3.75-5.25M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.75 3.75 0 0 1 21 12Z" />
-    </svg>
-  ),
-  docs: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-19.5 0A2.25 2.25 0 0 0 4.5 15h15a2.25 2.25 0 0 0 2.25-2.25m-19.5 0v.158c0 .873.342 1.71.95 2.317l.732.732c.607.607 1.444.95 2.317.95h11.238c.873 0 1.71-.343 2.317-.95l.732-.732c.608-.607.95-1.444.95-2.317V12.75M8.25 14.25h7.5" />
-    </svg>
-  ),
-  admin: (className) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-  )
-}
-
-function ThemeToggle() {
-  const [theme, setTheme] = useState(() =>
-    (typeof document !== 'undefined' && document.documentElement.dataset.theme) || 'light')
-  const toggle = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
-    localStorage.setItem('theme', next)
-    setTheme(next)
+const DASHBOARD_2_NAV = [
+  {
+    section: 'Intelligence',
+    items: [
+      { id: 'ai', label: 'AI Advisor', icon: 'ai' },
+      { id: 'predict', label: 'Predictive Analytics', icon: 'predict' },
+      { id: 'anomaly', label: 'Anomaly Detection', icon: 'anomaly', badge: '2', badgeType: 'r' },
+      { id: 'leak', label: 'Revenue Leakage', icon: 'leak' },
+      { id: 'shift', label: 'Shift Intelligence', icon: 'shift' },
+      { id: 'maint', label: 'Predictive Maint.', icon: 'maint', badge: '3', badgeType: 'w' },
+    ]
+  },
+  {
+    section: 'Safety & Environment',
+    items: [
+      { id: 'iot', label: 'Sensors and IoT', icon: 'iot' },
+      { id: 'blast', label: 'Blasting Management', icon: 'blast', badge: '38m', badgeType: 'w' },
+      { id: 'env', label: 'Environment Monitor', icon: 'env', badge: '2', badgeType: 'w' },
+    ]
+  },
+  {
+    section: 'Business',
+    items: [
+      { id: 'finance', label: 'Finance and Royalty', icon: 'finance' },
+      { id: 'comply', label: 'Compliance & Regs', icon: 'comply', badge: '2', badgeType: 'r' },
+      { id: 'admin', label: 'Admin and Settings', icon: 'admin' },
+    ]
   }
-  return (
-    <button className="themebtn" onClick={toggle} title="Toggle light / dark">
-      {theme === 'dark' ? '\u2600' : '\u263E'}
-    </button>
-  )
+]
+
+// Simple SVG Icons map
+const ICON_COMPONENTS = {
+  cmd: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V18ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18" /></svg>,
+  gate: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>,
+  pit: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v18M3 12h18M12 3l4 4M12 3L8 7M12 21l4-4M12 21l-4-4" /></svg>,
+  fleet: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8m-9-9h12a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 16.5v-9A1.5 1.5 0 0 1 6 6.75Z" /></svg>,
+  weigh: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 18h18M12 3v18" /></svg>,
+  yard: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16v16H4V4zm4 0v16m8-16v16" /></svg>,
+  dispatch: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>,
+  workers: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+  mach: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>,
+  ai: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+  predict: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 6l-9.5 9.5-5-5L1 18" /></svg>,
+  anomaly: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>,
+  leak: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>,
+  shift: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>,
+  maint: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91Z" /></svg>,
+  iot: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" /></svg>,
+  blast: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6M2 12h20" /></svg>,
+  env: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12M12 6a6 6 0 0 1 6 6" /></svg>,
+  finance: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M12 10v4M8 12h8" /></svg>,
+  comply: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>,
+  admin: <svg className="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
 }
 
 function Clock() {
-  const [now, setNow] = useState(new Date())
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t) }, [])
-  const d = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-  const t = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  return <span className="clk">{d} · {t}</span>
+  const [timeStr, setTimeStr] = useState('')
+  
+  useEffect(() => {
+    const updateTime = () => {
+      const n = new Date();
+      const d = n.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const t = n.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      setTimeStr(`${d} · ${t}`);
+    }
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span className="clock" id="clk">{timeStr}</span>
 }
 
 export default function App() {
-  const [active, setActive] = useState('cmd')
-  const Screen = SCREENS[active] || CommandCentre
+  const [activeDashboard, setActiveDashboard] = useState(1);
+  const [activeModule, setActiveModule] = useState('cmd');
+  const [aiInputValue, setAiInputValue] = useState('');
+  const [theme, setTheme] = useState('light');
+  
+  // Custom dialog log for the AI advisor drill-down simulator
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      text: 'MineOS AI Advisor ready. Ask anything about live data across Keonjhar (Fe), Sukinda (Cr), Koraput (Mn), Kodingamali (Al), and Pokhari (Li).'
+    }
+  ]);
+
+  // Hook global prompt sender
+  useEffect(() => {
+    window.sendPrompt = (text) => {
+      // Intercept dashboard toggle prompts
+      if (text.includes('Show Dashboard 2')) {
+        setActiveDashboard(2);
+        setActiveModule('ai');
+        return;
+      }
+      if (text.includes('Show Dashboard 1')) {
+        setActiveDashboard(1);
+        setActiveModule('cmd');
+        return;
+      }
+
+      // Record User Message
+      setMessages(prev => [...prev, { role: 'user', text }]);
+      setActiveModule('ai'); // Always switch to AI Advisor module to show the drilldown details!
+      
+      // Simulate clever AI intelligence based on the prompt
+      let response = "Analyzing query. Here are the live mine insights:\n";
+      const q = text.toLowerCase();
+      
+      if (q.includes('keonjhar') && (q.includes('production') || q.includes('grade') || q.includes('iron'))) {
+        response = `[OMC DRILL-DOWN] Keonjhar (Fe) Iron Ore Operations:
+        • ROM Production: 3,840T (91% of target)
+        • Lab Grade (LIMS): 62.4% Fe Fe (High Grade)
+        • AI Camera Accuracy: 94% vs LIMS grade checks
+        • Crusher Output: Jaw crusher active at 1,240 T/hr
+        • Weight reconciliation: -3% loss (-119T) reported at crusher discharge. Contamination risk: Low.`;
+      } else if (q.includes('sukinda') || q.includes('chrome') || q.includes('dms')) {
+        response = `[OMC DRILL-DOWN] Sukinda (Cr) Chrome Ore Operations:
+        • ROM Production: 1,960T (78% of target)
+        • DMS Grade Uplift: ROM 42% Cr₂O₃ concentrates successfully to 52% Cr₂O₃ grade.
+        • Gangue Removal Loss: -38% weight reduction expected, value increased by +₹2,600/T.
+        • Offline Asset alert: EX-07 Hitachi shovel is offline due to hydraulic cylinder fail (Health score: 12/100).`;
+      } else if (q.includes('optimise') || q.includes('route') || q.includes('routing')) {
+        response = `[OMC DYNAMIC ROUTING ENGINE] Optimizing routing across 5 sites:
+        • Keonjhar: Queue at Weighbridge-1 heavy. Redirecting 4 dumpers to Weighbridge-2.
+        • Sukinda: EX-07 offline. Re-routing spare dumpers OD12 and OD14 to stockpile haulage.
+        • Geofence correction: Rerouting OD17 chrome truck back to correct Zone D, preventing Fe contamination at Stockyard Zone C.`;
+      } else if (q.includes('dz-01') || q.includes('pressure') || q.includes('maintenance')) {
+        response = `[PREDICTIVE MAINTENANCE REPORT] DZ-01 (Caterpillar D9T Crawler - Keonjhar):
+        • Prognosis: Fuel rate anomalies and engine oil pressure drop (-18%). Failure predicted in 72-96 hrs.
+        • Sensor data: Oil Temp 102°C, Vibration +23% over baseline.
+        • Financial recommendation: Repair now (cost: ₹45,000) vs Ignore failure (breakdown loss: ₹4.04 Lakhs).`;
+      } else if (q.includes('weight loss') || q.includes('od09') || q.includes('raju')) {
+        response = `[ANOMALY SYSTEM ALERT] Driver Raju Kumar (OD09AB4421 - Keonjhar):
+        • Pattern Flagged: 5 consecutive weight losses between Pit A3 and stockyard.
+        • Tonnage lost: Average 3.8T loss per trip during 10:00–11:30 shift window.
+        • Audit Status: OTP release required from mine manager. Manager override logged to system.`;
+      } else if (q.includes('blast') || q.includes('checklist')) {
+        response = `[OMC SAFETY CHECKS] Keonjhar Pit A3 Blast countdown:
+        • Checklist status: 4/6 completed.
+        • Clear: Workers evacuated (GPS checked), Security cordon established (300m), Village alert.
+        • Pending: Shot firer physical check, explosives weight verification logs.`;
+      } else if (q.includes('royalty') || q.includes('ibm') || q.includes('compliance')) {
+        response = `[REGULATORY FILING TASK] OMC Compliance Status:
+        • IBM Monthly Production Return: Due in 6 days (15 July 2026).
+        • Royalty payment: Outstanding amount ₹84.2 Lakhs due in 8 days to Govt. of Odisha.
+        • Digital Challans: 312 challans verified by sales weighbridge exit gate ANPR.`;
+      } else if (q.includes('leakage') || q.includes('dilution') || q.includes('contamination')) {
+        response = `[REVENUE INTELLIGENCE] Monthly Revenue Leakage analysis:
+        • Total leakage: ₹1.84 Crores.
+        • Key source: Grade dilution (46% - ₹84.2L) at Stockyard Zone C due to wrong-zone dumping.
+        • Transit loss: ₹62.4L weight losses. Recoverable value: ₹62.6L.`;
+      } else {
+        response = `[AI OS RESPONSE] Received prompt: "${text}".
+        Query verified across MineOS RAG indexes.
+        Site-wide telemetry is active. All 5 minerals (Fe, Cr, Mn, Al, CaCO3) comply with SPCB environmental sensors. PM2.5 at 142µg/m³ (limit 150) at Keonjhar.`;
+      }
+      
+      // Delay response slightly to feel natural
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'assistant', text: response }]);
+      }, 750);
+    };
+  }, []);
+
+  // Update theme helper
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    localStorage.setItem('theme', nextTheme);
+    setTheme(nextTheme);
+  };
+
+  const handleAsk = () => {
+    if (aiInputValue.trim()) {
+      window.sendPrompt(aiInputValue.trim());
+      setAiInputValue('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleAsk();
+    }
+  };
+
+  // Nav list based on active dashboard
+  const currentNav = activeDashboard === 1 ? DASHBOARD_1_NAV : DASHBOARD_2_NAV;
+
   return (
-    <div className="shell">
-      <nav className="nav">
-        <div className="brand"><span className="bdot" /> MineTrace AI</div>
-        {NAV.map(sec => (
-          <div key={sec.section}>
-            <div className="ns">{sec.section}</div>
-            {sec.items.map(it => {
-              const Icon = ICONS[it.id]
-              return (
-                <div key={it.id} className={`ni ${active === it.id ? 'on' : ''}`}
-                     onClick={() => setActive(it.id)}>
-                  <div className="ni-label-container">
-                    {Icon ? Icon("ni-icon") : null}
-                    <span>{it.label}</span>
-                  </div>
-                  {it.badge && <span className={`nb ${it.badge === 'LIVE' ? 'w' : 'r'}`}>{it.badge}</span>}
-                </div>
-              )
-            })}
+    <div className={`shell ${activeDashboard === 1 ? 'd1' : 'd2'}`}>
+      
+      {/* TOP BAR */}
+      <header className="topbar">
+        <div className="topbar-left">
+          <div className="brand-logo">
+            <span className="brand-dot" />
+            <span>MineOS</span>
           </div>
-        ))}
-      </nav>
-      <div className="appmain">
-        <div className="topbar">
-          <div className="mpill"><span className="ldot" /> All sites · live</div>
-          <div className="tbr">
-            <ThemeToggle />
-            <Clock />
-            <div className="av">MT</div>
+          <div className="company-pill">
+            <svg style={{ width: 10, height: 10 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 21h18M3 7V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M5 21V7m14 14V7m-7 14v-8" />
+            </svg>
+            <span>OMC · Bharat Multi-Mineral</span>
+          </div>
+          <div className="live-indicator">
+            <span className="live-dot" />
+            <span>Live · 5 sites</span>
           </div>
         </div>
-        <main className="content"><Screen /></main>
-      </div>
+
+        <div className="topbar-right">
+          {/* Dashboard Navigation Pill */}
+          {activeDashboard === 1 ? (
+            <div 
+              className="dashboard-toggle-pill"
+              onClick={() => window.sendPrompt('Show Dashboard 2 with Intelligence, Safety and Business modules')}
+            >
+              Operations and People → Intelligence and Business ↗
+            </div>
+          ) : (
+            <div 
+              className="dashboard-toggle-pill"
+              onClick={() => window.sendPrompt('Show Dashboard 1 with Operations and People modules')}
+            >
+              ← Operations and People
+            </div>
+          )}
+
+          {/* Theme switcher */}
+          <button className="icon-button" onClick={toggleTheme} title="Toggle theme">
+            {theme === 'dark' ? (
+              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
+            ) : (
+              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
+
+          {/* IoT health status plug icon */}
+          <button className="icon-button" title="IoT Network Health">
+            <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" />
+            </svg>
+          </button>
+
+          {/* Notification bell */}
+          <div className="bell-icon-wrapper">
+            <button className="icon-button" title="Notifications">
+              <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </button>
+            <span className="bell-pip" />
+          </div>
+
+          <Clock />
+          
+          <div className="avatar-circle">OM</div>
+        </div>
+      </header>
+
+      {/* LEFT NAVIGATION SIDEBAR */}
+      <aside className="sidebar">
+        {currentNav.map((sec, idx) => (
+          <div key={idx} className="nav-section">
+            <div className="section-label">{sec.section}</div>
+            {sec.items.map((it) => (
+              <div
+                key={it.id}
+                className={`ni ${activeModule === it.id ? 'on' : ''}`}
+                onClick={() => setActiveModule(it.id)}
+              >
+                <div className="ni-label-container">
+                  {ICON_COMPONENTS[it.icon] || null}
+                  <span>{it.label}</span>
+                </div>
+                {it.badge && (
+                  <span className={`nb ${it.badgeType === 'r' ? 'r' : 'w'}`}>
+                    {it.badge}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </aside>
+
+      {/* MIDDLE CONTENT AREA */}
+      <main className="main-content">
+        {Object.entries(SCREENS).map(([id, Component]) => (
+          <div key={id} className={`module-container ${activeModule === id ? 'on' : ''}`}>
+            <Component messages={messages} setMessages={setMessages} />
+          </div>
+        ))}
+      </main>
+
+      {/* RIGHT COLUMN (Operations dashboard 1 only) */}
+      {activeDashboard === 1 && (
+        <aside className="right-sidebar">
+          <div>
+            <div className="right-section-title">Compliance Radar</div>
+            <div className="radar-list">
+              {[
+                { name: 'IBM return', sub: '6 days remaining', days: '6d', urgency: 'red', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+                { name: 'Royalty ₹84.2L', sub: 'Odisha Govt', days: '8d', urgency: 'red', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+                { name: '8 truck certs', sub: 'Fitness expiring', days: '11d', urgency: 'amber', icon: 'M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v10h1' },
+                { name: '14 worker certs', sub: 'Safety refresh', days: '30d', urgency: 'amber', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' },
+                { name: 'EC monitoring', sub: 'Submitted Jun 30', days: 'Done', urgency: 'green', icon: 'M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12' },
+                { name: 'All 5 leases', sub: 'Valid to 2031', days: 'Valid', urgency: 'green', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' },
+              ].map((item, i) => (
+                <div 
+                  key={i} 
+                  className="radar-item"
+                  onClick={() => window.sendPrompt(`Show compliance status for ${item.name}`)}
+                >
+                  <div className="radar-item-left">
+                    <div className={`radar-icon-box ${item.urgency}`}>
+                      <svg style={{ width: 10, height: 10 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d={item.icon} />
+                      </svg>
+                    </div>
+                    <div className="radar-info">
+                      <span className="radar-name">{item.name}</span>
+                      <span className="radar-sub">{item.sub}</span>
+                    </div>
+                  </div>
+                  <span className={`radar-days ${item.urgency}`}>{item.days}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Advisor Panel */}
+          <div className="ai-advisor-panel">
+            <div className="ai-advisor-header">
+              <span className="live-dot" />
+              <span>AI Advisor · All 5 sites</span>
+            </div>
+            
+            <div className="ai-insight-box">
+              <strong>Priority actions now:</strong>
+              <div style={{ marginTop: 3 }}>1. OD09 — 5 consecutive weight losses</div>
+              <div>2. DZ-01 — 67% failure (repair: ₹45K)</div>
+              <div>3. IBM return — due in 6 days</div>
+              <div>4. Blast — Pit A3 check (4/6 ready)</div>
+            </div>
+
+            <div className="ai-quick-chips">
+              {[
+                { label: 'All sites production', prompt: 'Show production details for all 5 sites' },
+                { label: 'Crusher losses', prompt: 'Analyze crusher weight losses and gangue removal' },
+                { label: 'IBM return', prompt: 'Compile return data for IBM monthly production return' },
+                { label: 'Grade risk', prompt: 'Report grade contamination and wrong zone alerts' },
+                { label: 'Recovery plan', prompt: 'Show revenue recovery plan for night shift gaps' }
+              ].map((chip, idx) => (
+                <span 
+                  key={idx} 
+                  className="quick-chip"
+                  onClick={() => window.sendPrompt(chip.prompt)}
+                >
+                  {chip.label}
+                </span>
+              ))}
+            </div>
+
+            <div className="ai-input-row">
+              <input
+                type="text"
+                className="input-field ai-input"
+                placeholder="Ask operations..."
+                value={aiInputValue}
+                onChange={e => setAiInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                id="aiq2"
+              />
+              <button className="ai-send-btn" onClick={handleAsk}>Send</button>
+            </div>
+          </div>
+        </aside>
+      )}
+
     </div>
   )
 }

@@ -1,67 +1,123 @@
 import { useState } from 'react'
-import { Screen } from '../components/ui.jsx'
-import { post } from '../lib/api.js'
-const SUGGESTIONS = [
-  'Why did pit yield drop vs crusher output?',
-  'Which truck is losing the most material?',
-  'Which stockyard zone has wrong-zone dumps?',
-]
-export default function AIAdvisor() {
-  const [q, setQ] = useState('')
-  const [log, setLog] = useState([])
-  const [busy, setBusy] = useState(false)
-  async function ask(text) {
-    const question = (text ?? q).trim(); if (!question) return
-    setBusy(true); setQ('')
-    setLog(l => [...l, { role: 'user', text: question }])
-    try {
-      const r = await post('/api/ai/ask', { question })
-      setLog(l => [...l, { role: 'ai', text: r.answer, stub: r.stub }])
-    } catch (e) {
-      setLog(l => [...l, { role: 'ai', text: 'Error: ' + e }])
-    } finally { setBusy(false) }
+
+export default function AIAdvisor({ messages = [], setMessages }) {
+  const [inp, setInp] = useState('')
+
+  const handleSend = () => {
+    if (inp.trim()) {
+      window.sendPrompt(inp.trim())
+      setInp('')
+    }
   }
+
+  const chips = [
+    'Total production today',
+    'Crusher losses today',
+    'Contamination risk',
+    'Weight loss patterns',
+    'IBM return data',
+    'Failure prediction',
+    'Royalty liability',
+    'Blast checklist',
+    'EC dust compliance',
+    'Revenue recovery plan',
+  ]
+
   return (
-    <Screen title="AI advisor" subtitle="Natural-language questions over the mine data (demo mode)" state={{}}>
-      <div className="card" style={{ minHeight: 320, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
-          {log.length === 0 && (
-            <div className="placeholder" style={{ padding: 20 }}>
-              Ask about production, losses, grade or anomalies. Try:
-              <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {SUGGESTIONS.map(sug => (
-                  <button key={sug} onClick={() => ask(sug)}
-                    style={{ fontSize: 12, padding: '6px 10px', border: '1px solid var(--border-strong)',
-                      borderRadius: 6, background: 'var(--surface-0)', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                    {sug}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {log.map((m, i) => (
-            <div key={i} style={{ margin: '8px 0', textAlign: m.role === 'user' ? 'right' : 'left' }}>
-              <span style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, maxWidth: '75%',
-                background: m.role === 'user' ? 'var(--bg-accent)' : 'var(--surface-2)',
-                color: 'var(--text-primary)', fontSize: 13 }}>
-                {m.text}{m.stub && <span className="ms" style={{ display: 'block', marginTop: 4 }}>demo mode</span>}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input value={q} onChange={e => setQ(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && ask()}
-            placeholder="Ask a question…"
-            style={{ flex: 1, padding: '9px 12px', border: '1px solid var(--border-strong)',
-              borderRadius: 8, fontSize: 13 }} />
-          <button onClick={() => ask()} disabled={busy}
-            style={{ padding: '9px 18px', border: 'none', borderRadius: 8,
-              background: 'var(--fill-accent)', color: '#fff', cursor: 'pointer', fontWeight: 500 }}>
-            {busy ? '…' : 'Ask'}
-          </button>
+    <>
+      <div className="module-header">
+        <div className="module-header-info">
+          <div className="module-title">AI Advisor</div>
+          <div className="module-subtitle">LLM-powered question answering across all 21 modules and 5 sites</div>
         </div>
       </div>
-    </Screen>
+
+      <div className="module-body">
+        {/* STAT ROW */}
+        <div className="kc-grid">
+          <div className="kc accent">
+            <span className="kc-label">Queries Today</span>
+            <span className="kc-value">284 queries</span>
+            <span className="kc-delta neutral">OMC user active</span>
+          </div>
+          <div className="kc success">
+            <span className="kc-label">Avg Response</span>
+            <span className="kc-value">1.8 sec</span>
+            <span className="kc-delta up">Sub-2s standard</span>
+          </div>
+          <div className="kc danger">
+            <span className="kc-label">Anomalies Flagged</span>
+            <span className="kc-value">7 issues</span>
+            <span className="kc-delta down">Actions required</span>
+          </div>
+          <div className="kc warning">
+            <span className="kc-label">RAG Documents</span>
+            <span className="kc-value">1,240 docs</span>
+            <span className="kc-delta neutral">SAP/LIMS/LMS sync</span>
+          </div>
+        </div>
+
+        {/* LATEST INSIGHT PANEL */}
+        <div className="panel" style={{ borderColor: 'var(--border-warning)' }}>
+          <div className="ph" style={{ background: 'var(--bg-warning)', borderBottom: '0.5px solid var(--border-warning)' }}>
+            <span className="pt" style={{ color: 'var(--text-warning)' }}>Latest Critical Mining Intelligence Insights</span>
+          </div>
+          <div className="pbody" style={{ fontSize: 10, lineHeight: 1.5, color: 'var(--text-primary)' }}>
+            "Critical at Sukinda: EX-07 offline reducing chrome output to 78%. OD17 wrong-zone entry risks grade contamination. Keonjhar: OD09 has 5 consecutive weight losses — driver Raju Kumar pattern flagged. DZ-01 at 67% failure probability — fix costs ₹45K vs ₹4.04L if ignored. IBM return due in 6 days."
+          </div>
+        </div>
+
+        {/* CHIP SUGGESTIONS */}
+        <div className="panel">
+          <div className="ph"><span className="pt">Quick Suggested Queries</span></div>
+          <div className="pbody">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {chips.map((chip, idx) => (
+                <span 
+                  key={idx} 
+                  className="quick-chip" 
+                  onClick={() => window.sendPrompt(chip)}
+                  style={{ fontSize: 9, padding: '3px 8px' }}
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* CHIP DIALOG CONVERSATION VIEW */}
+        <div className="panel" style={{ flex: 1, minHeight: 200, display: 'flex', flexDirection: 'column' }}>
+          <div className="ph"><span className="pt">MineOS Copilot Dialogue Terminal</span></div>
+          <div className="pbody" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            
+            <div className="chat-container">
+              {messages.map((m, i) => (
+                <div key={i} className={`chat-msg ${m.role}`}>
+                  <span className="chat-role">{m.role}</span>
+                  <span className="chat-text">{m.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="ai-input-row" style={{ marginTop: 10 }}>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Ask anything about any site, mineral, module or operation..."
+                value={inp}
+                onChange={e => setInp(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                style={{ flex: 1, fontSize: 10, padding: 6 }}
+                id="aiq"
+              />
+              <button className="btn" onClick={handleSend} style={{ padding: '6px 16px' }}>Send Query</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </>
   )
 }
