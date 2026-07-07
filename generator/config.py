@@ -88,6 +88,28 @@ MINERALS = {
         "xrf_params": ["Mn", "Fe", "SiO2", "Al2O3", "P"],
         "typical_grade": 39.0, "grade_sd": 5.0,
     },
+    "Al": {
+        "name": "Bauxite", "assay_field": "Al2O3",
+        "bands": [
+            ("High",   50.0, 100.0, 4800),
+            ("Medium", 40.0,  50.0, 3200),
+            ("Low",    30.0,  40.0, 1800),
+        ],
+        "royalty_pct": 15.0,
+        "xrf_params": ["Al2O3", "Fe2O3", "SiO2", "TiO2", "LOI"],
+        "typical_grade": 46.0, "grade_sd": 4.5,
+    },
+    "CaCO3": {
+        "name": "Limestone", "assay_field": "CaCO3",
+        "bands": [
+            ("High",   80.0, 100.0, 1200),
+            ("Medium", 70.0,  80.0, 800),
+            ("Low",    55.0,  70.0, 450),
+        ],
+        "royalty_pct": 12.0,
+        "xrf_params": ["CaCO3", "MgO", "SiO2", "Al2O3", "Fe2O3"],
+        "typical_grade": 82.0, "grade_sd": 5.0,
+    },
 }
 
 # --------------------------------------------------------------------------
@@ -116,6 +138,14 @@ SITES = [
      "location": "Sundargarh, Odisha", "lat": 21.9800, "lng": 85.2100,
      "mineral": "Mn", "pits": ["PIT_C1", "PIT_C2"],
      "area_ha": 62.8},
+    {"site_id": "SITE_D", "name": "Kodingamali Bauxite Block",
+     "location": "Koraput, Odisha", "lat": 18.9200, "lng": 83.0500,
+     "mineral": "Al", "pits": ["PIT_D1", "PIT_D2", "PIT_D3"],
+     "area_ha": 78.4},
+    {"site_id": "SITE_E", "name": "Birmitrapur Limestone Block",
+     "location": "Sundargarh, Odisha", "lat": 22.3900, "lng": 84.7600,
+     "mineral": "CaCO3", "pits": ["PIT_E1", "PIT_E2"],
+     "area_ha": 55.0},
 ]
 
 TRUCKS_PER_SITE = 15   # -> 45 trucks total across 3 sites (matches doc's fleet)

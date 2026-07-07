@@ -104,7 +104,7 @@ def build_fleet_master():
         ("Ashok Leyland 4940", 45), ("BharatBenz 4428", 55),
         ("Eicher Pro 6031", 48),
     ]
-    type_by_mineral = {"Fe": "AB", "Cr": "CR", "Mn": "MN"}
+    type_by_mineral = {"Fe": "AB", "Cr": "CR", "Mn": "MN", "Al": "BX", "CaCO3": "LS"}
     trucks, driver_seq = [], 5  # WRK00005 is the first named driver
     # Named demo trucks first, pinned to their sites.
     pinned = {
@@ -154,7 +154,7 @@ def build_fleet_master():
     exc_models = ["Komatsu PC1250", "Hitachi EX1200",
                   "Caterpillar 390F", "Volvo EC950F"]
     for i in range(1, 13):
-        s = C.SITES[i % 3]
+        s = C.SITES[i % len(C.SITES)]
         equipment.append({
             "equipment_id": f"EX-{i:02d}", "type": "excavator",
             "model": exc_models[i % 4], "site_id": s["site_id"],
@@ -166,13 +166,13 @@ def build_fleet_master():
         equipment.append({
             "equipment_id": f"DZ-{i:02d}", "type": "dozer",
             "model": "Caterpillar D9T" if i % 2 else "Komatsu D375A",
-            "site_id": C.SITES[i % 3]["site_id"],
+            "site_id": C.SITES[i % len(C.SITES)]["site_id"],
             "health_score": 44 if i == 1 else int(np.random.randint(60, 96)),
         })
     for i in range(1, 5):
         equipment.append({"equipment_id": f"DR-{i:02d}", "type": "drill_rig",
                           "model": "Atlas Copco DM45" if i % 2 else "Sandvik DR580",
-                          "site_id": C.SITES[i % 3]["site_id"]})
+                          "site_id": C.SITES[i % len(C.SITES)]["site_id"]})
     for eid in ["CV-01", "CV-02"]:
         equipment.append({"equipment_id": eid, "type": "conveyor", "site_id": "SITE_A"})
     for eid in ["GEN-01", "GEN-02", "GEN-03"]:
@@ -254,6 +254,12 @@ def build_customers_master():
         {"customer_id": "CUST005", "name": "MOIL Nagpur",
          "mineral_ordered": "Manganese Ore", "grade_specification": "Mn 35%+",
          "monthly_volume_t": 9800, "payment_terms_days": 30},
+        {"customer_id": "CUST006", "name": "NALCO Angul",
+         "mineral_ordered": "Bauxite", "grade_specification": "Al2O3 45%+",
+         "monthly_volume_t": 35000, "payment_terms_days": 30},
+        {"customer_id": "CUST007", "name": "Dalmia Cement Rajgangpur",
+         "mineral_ordered": "Limestone", "grade_specification": "CaCO3 75%+",
+         "monthly_volume_t": 40000, "payment_terms_days": 45},
     ]
 
 

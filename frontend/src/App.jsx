@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import Dashboard from './screens/Dashboard.jsx'
 import CommandCentre from './screens/CommandCentre.jsx'
 import EntryGate from './screens/EntryGate.jsx'
 import PitGrade from './screens/PitGrade.jsx'
@@ -25,7 +24,6 @@ import Admin from './screens/Admin.jsx'
 
 // Dynamic Screen Switcher mapping all 23 modules individually
 const SCREENS = {
-  dashboard: Dashboard,
   cmd: CommandCentre,
   gate: EntryGate,
   pit: PitGrade,
@@ -55,7 +53,6 @@ const SIDEBAR_NAV = [
   {
     section: 'Operations',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
       { id: 'cmd', label: 'Command Centre', icon: 'cmd' },
       { id: 'gate', label: 'Entry Gate AI Vision', icon: 'gate', badge: 'LIVE', badgeType: 'w' },
       { id: 'pit', label: 'Pit and Grade AI', icon: 'pit', badge: '3', badgeType: 'w' },
@@ -147,7 +144,8 @@ function Clock() {
 }
 
 export default function App() {
-  const [activeModule, setActiveModule] = useState('dashboard')
+  const [activeModule, setActiveModule] = useState('cmd')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [aiInputValue, setAiInputValue] = useState('')
   const [theme, setTheme] = useState('light')
   const [searchQuery, setSearchQuery] = useState('')
@@ -164,46 +162,29 @@ export default function App() {
   useEffect(() => {
     window.sendPrompt = (text) => {
       setMessages(prev => [...prev, { role: 'user', text }])
-      setActiveModule('ai') // Switch to AI Advisor to see answers
+      setActiveModule('ai')
       
-      let response = "Analyzing query. Here are the live mine insights:\n"
-      const q = text.toLowerCase()
-      
-      if (q.includes('production') || q.includes('tonnes') || q.includes('mined')) {
-        response = `[OMC DRILL-DOWN] Production stats compiled:
-        • ROM Production: 9,240T (88% of target)
-        • Iron (Keonjhar): 3,840T (91% target, 62.4% Fe)
-        • Chrome (Sukinda): 1,960T (78% target, 51.2% Cr2O3)
-        • Manganese (Koraput): 1,440T (88% target, 38.7% Mn)
-        • Bauxite (Kodingamali): 1,200T (92% target, 52.3% Al)
-        • Limestone (Pokhari): 800T (89% target, 94.1% CaCO3)`
-      } else if (q.includes('crusher') || q.includes('leakage') || q.includes('loss')) {
-        response = `[REVENUE INTELLIGENCE] Monthly Revenue Leakage analysis:
-        • Total transit loss: ₹1.84 Crores (34,220T)
-        • Key source: Crusher→Stockyard loss (-18.58%) at Sukinda and Keonjhar crusher discharge points
-        • Contamination risk: High at Stockyard Zone C due to chrome trucks routing errors.`
-      } else if (q.includes('truck') || q.includes('fleet') || q.includes('route') || q.includes('od09')) {
-        response = `[FLEET ROUTING INSIGHT] Truck OD09AB4421 Anomaly:
-        • Issue: 5 consecutive weight losses between Pit A3 and Keonjhar stockyard.
-        • Total lost volume: 17T this week during the morning shift (10:00–11:30).
-        • Recommendation: Route inspection logged. OTP release lock active on operator console.`
-      } else if (q.includes('maintenance') || q.includes('dz-01') || q.includes('failure')) {
-        response = `[PREDICTIVE MAINTENANCE REPORT] Caterpillar D9T Crawler (DZ-01):
-        • Diagnosis: Oil pressure drop (-18%) and fuel rate anomaly (+12%).
-        • Risk Level: 67% failure probability within 72-96 hrs.
-        • Recommendation: Immediate replacement of engine seals. Estimated cost: ₹45,000.`
-      } else if (q.includes('blast') || q.includes('safety') || q.includes('evacuate')) {
-        response = `[OMC SAFETY INTELLIGENCE] Keonjhar Pit A3 blast countdown:
-        • Checklist: 4/6 completed.
-        • Verified: Worker evacuation (GPS checks completed), 300m safety cordon established.
-        • Pending: Final shot firer ignition credentials audit.`
-      } else {
-        response = `[AI INSIGHT] Telemetry indexes queried. Standard SPCB dust level active (PM2.5: 142 ug/m3). Leases valid through 2031. Digital challans cleared.`
-      }
-
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', text: response }])
-      }, 750)
+      // Call the real backend AI endpoint
+      fetch('/api/ai/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            text: data.answer || 'No response received.',
+            model: data.model || null,
+            stub: data.stub || false
+          }])
+        })
+        .catch(err => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            text: `Connection error: ${err.message}. Make sure the backend is running on port 8000.` 
+          }])
+        })
     }
   }, [])
 
@@ -229,10 +210,10 @@ export default function App() {
     setSearchQuery(e.target.value)
   }
 
-  const CurrentScreen = SCREENS[activeModule] || Dashboard
+  const CurrentScreen = SCREENS[activeModule] || CommandCentre
 
   return (
-    <div className="shell d1">
+    <div className="shell d1" style={{ gridTemplateColumns: sidebarCollapsed ? '56px 1fr 300px' : '240px 1fr 300px' }}>
       {/* TOP NAVBAR */}
       <header className="topbar">
         <div className="topbar-left">
@@ -364,8 +345,35 @@ export default function App() {
         </div>
       </header>
 
-      {/* LEFT PERSISTENT SIDEBAR */}
-      <aside className="sidebar" style={{ maxHeight: 'calc(100vh - 60px)', overflowY: 'auto' }}>
+      {/* LEFT PERSISTENT SIDEBAR — with collapse toggle */}
+      <aside className="sidebar" style={{
+        maxHeight: 'calc(100vh - 60px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        width: sidebarCollapsed ? 56 : 240,
+        minWidth: sidebarCollapsed ? 56 : 240,
+        transition: 'width 0.25s ease, min-width 0.25s ease',
+        position: 'relative'
+      }}>
+        {/* Collapse toggle button */}
+        <div
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          style={{
+            position: 'absolute', top: 14, right: -1, zIndex: 50,
+            width: 24, height: 24, borderRadius: '50%',
+            background: 'var(--surface-2)', border: '1.5px solid var(--border-strong)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all 0.15s ease',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            style={{ width: 12, height: 12, transition: 'transform 0.25s ease',
+              transform: sidebarCollapsed ? 'rotate(180deg)' : 'none' }}>
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </div>
+
         {SIDEBAR_NAV.map((sec, secIdx) => {
           // Filter section items based on search query
           const filteredItems = sec.items.filter(it => 
@@ -375,18 +383,21 @@ export default function App() {
 
           return (
             <div key={secIdx} className="nav-section">
-              <div className="section-label">{sec.section}</div>
+              {!sidebarCollapsed && <div className="section-label">{sec.section}</div>}
               {filteredItems.map((it) => (
                 <div
                   key={it.id}
                   className={`ni ${activeModule === it.id ? 'on' : ''}`}
                   onClick={() => setActiveModule(it.id)}
+                  style={sidebarCollapsed ? { padding: '10px 0', justifyContent: 'center' } : undefined}
                 >
-                  <div className="ni-label-container">
-                    {ICON_COMPONENTS[it.icon] || null}
-                    <span>{it.label}</span>
+                  <div className="ni-label-container" style={sidebarCollapsed ? { justifyContent: 'center', gap: 0 } : undefined}>
+                    <span style={sidebarCollapsed ? { width: 20, height: 20 } : undefined}>
+                      {ICON_COMPONENTS[it.icon] || null}
+                    </span>
+                    {!sidebarCollapsed && <span>{it.label}</span>}
                   </div>
-                  {it.badge && (
+                  {!sidebarCollapsed && it.badge && (
                     <span className={`nb ${it.badgeType === 'r' ? 'r' : 'w'}`}>
                       {it.badge}
                     </span>
@@ -489,3 +500,4 @@ export default function App() {
     </div>
   )
 }
+

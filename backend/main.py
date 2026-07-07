@@ -11,6 +11,13 @@ import json
 import os
 from contextlib import contextmanager
 
+# Load .env file if it exists (for API keys etc.)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, rely on system env vars
+
 import duckdb
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -83,10 +90,10 @@ def command_centre():
     workers_on_site = round(workers_total * 0.64)
 
     minerals = _rows("""SELECT mineral_type, ROUND(AVG(grade_lims_pct),1) AS grade
-                        FROM trips WHERE mineral_type IN ('Iron Ore','Chrome Ore','Manganese Ore')
-                        GROUP BY mineral_type""")
+                        FROM trips GROUP BY mineral_type""")
     mmap = {'Iron Ore': ('Fe', 'Iron Ore'), 'Chrome Ore': ('Cr', 'Chrome'),
-            'Manganese Ore': ('Mn', 'Manganese')}
+            'Manganese Ore': ('Mn', 'Manganese'), 'Bauxite': ('Al', 'Bauxite'),
+            'Limestone': ('CaCO3', 'Limestone')}
     minerals_out = [{'code': mmap[m['mineral_type']][0], 'name': mmap[m['mineral_type']][1],
                      'grade': m['grade']} for m in minerals if m['mineral_type'] in mmap]
 
@@ -131,15 +138,22 @@ def command_centre():
 
     # fleet/worker map: real trucks per site, synthetic positions (seeded)
     _r.seed(7)
-    sites = [('SITE_A', 'Site A — Iron', 'Fe'), ('SITE_B', 'Site B — Chrome', 'Cr'),
-             ('SITE_C', 'Site C — Mn', 'Mn')]
+    mineral_labels = {'Fe': 'Iron', 'Cr': 'Chrome', 'Mn': 'Mn',
+                      'Al': 'Bauxite', 'CaCO3': 'Limestone'}
     site_map = []
-    for sid, sname, mineral in sites:
+    all_sites = _rows("SELECT DISTINCT site_assigned AS site_id FROM trucks ORDER BY site_assigned")
+    site_meta = {s["site_id"]: s for s in
+                 json.load(open(os.path.join(MASTER, "mine_master.json")))["sites"]}
+    for row in all_sites:
+        sid = row["site_id"]
+        meta = site_meta.get(sid, {})
+        mcode = meta.get("mineral_code", "Fe")
+        sname = f"{meta.get('name', sid).split()[0]} — {mineral_labels.get(mcode, mcode)}"
         trucks = _rows("SELECT truck_id FROM trucks WHERE site_assigned=? LIMIT 3", [sid])
         dots = []
         for tk in trucks:
             tid = tk['truck_id']
-            status = 'chrome' if mineral == 'Cr' else 'loaded'
+            status = 'chrome' if mcode == 'Cr' else 'loaded'
             if tid == 'OD09AB4421':
                 status = 'alert'
             dots.append({'id': tid[-4:], 'status': status,
@@ -149,7 +163,7 @@ def command_centre():
     return {
         'company': 'Bharat Multi-Mineral Corp — Odisha',
         'shift': 'Morning shift · All 3 sites · 06:00–14:00',
-        'sites_count': 3,
+        'sites_count': 5,
         'kpis': {
             'total_production_t': actual, 'pct_target': pct,
             'active_trucks': active, 'total_trucks': total_trucks,
@@ -206,7 +220,8 @@ def pit_grade():
                           FROM trips GROUP BY mineral_type""")
     sample = _rows("""SELECT trip_id, truck_id, mineral_type, grade_band,
                              grade_camera_pct, grade_eye_estimate_pct,
-                             grade_lims_pct, grade_xrf_pct
+                             grade_lims_pct, grade_xrf_pct,
+                             ROUND(weight_at_pit_tonnes,1) AS weight_at_pit_tonnes
                       FROM trips ORDER BY trip_start_time DESC LIMIT 20""")
     return {"accuracy": accuracy, "by_mineral": by_mineral, "sample": sample}
 
@@ -371,15 +386,256 @@ def documents():
     return {"challans": docs}
 
 
-# ================================================================ AI ADVISOR (stub)
+# ================================================================ AI ADVISOR (OpenRouter)
+import requests as _requests
+
+OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openrouter/free")
+
+# Reliable free models in priority order (July 2026)
+# If the user's chosen model fails, we try these in sequence
+FALLBACK_MODELS = [
+    "openrouter/free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "google/gemma-4-31b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+]
+
+
+# Check if API key is loaded
+@app.get("/api/ai/status")
+def ai_status():
+    has_key = bool(OPENROUTER_KEY)
+    return {
+        "has_api_key": has_key,
+        "key_prefix": OPENROUTER_KEY[:12] + "..." if has_key else "NOT SET",
+        "default_model": OPENROUTER_MODEL,
+        "message": "OpenRouter connected" if has_key else "No API key found. Create a .env file with OPENROUTER_API_KEY=your-key"
+    }
+
+
+def _build_mine_context():
+    """Gather a concise snapshot of real mine data to feed the LLM."""
+    try:
+        kpis = _one("SELECT * FROM v_exec_kpis")
+        waterfall = _one("SELECT * FROM v_waterfall_total")
+        top_trucks = _rows("SELECT * FROM v_truck_anomalies LIMIT 5")
+        grade_acc = _one("SELECT * FROM v_grade_accuracy")
+        at_risk = _rows("SELECT * FROM v_equipment_at_risk")
+        shifts = _rows("SELECT * FROM v_shift_summary")
+        finance = _rows("SELECT * FROM v_finance")
+
+        # compliance
+        cp = os.path.join(os.path.dirname(MASTER), "raw", "compliance_deadlines.json")
+        compliance = json.load(open(cp)) if os.path.exists(cp) else {}
+
+        ctx = f"""=== MINETRACE AI — LIVE MINE DATA SNAPSHOT ===
+Company: Bharat Multi-Mineral Corporation Ltd, Odisha, India
+Sites: 5 (Keonjhar-Iron, Sukinda-Chrome, Bonai-Manganese, Kodingamali-Bauxite, Birmitrapur-Limestone)
+Fleet: 75 trucks across 5 sites, 340 workers
+
+--- EXECUTIVE KPIs ---
+Total mined: {kpis.get('total_mined_mt')} MT
+Total dispatched: {kpis.get('total_dispatched_mt')} MT
+ROM grade (Fe avg): {kpis.get('rom_grade_avg_fe_pct')}%
+Fleet utilisation: {kpis.get('fleet_utilisation_pct')}%
+On-time dispatch: {kpis.get('on_time_dispatch_pct')}%
+Zone mismatches: {kpis.get('zone_mismatches')}
+Transport loss: {kpis.get('transport_loss_pct')}%
+
+--- RECONCILIATION WATERFALL ---
+Pit: {waterfall.get('pit_mt')} MT → Crusher: {waterfall.get('crusher_mt')} MT → Stockyard: {waterfall.get('stockyard_mt')} MT → Dispatch: {waterfall.get('dispatch_mt')} MT
+Pit→Crusher loss: {waterfall.get('loss_pit_crusher_pct')}%
+Crusher→Stockyard loss: {waterfall.get('loss_crusher_stockyard_pct')}% (DOMINANT LEAK)
+Stockyard→Dispatch loss: {waterfall.get('loss_stockyard_dispatch_pct')}%
+
+--- GRADE ACCURACY (mean absolute error vs LIMS ground truth) ---
+AI Camera MAE: {grade_acc.get('camera_mae')}%
+Eye estimate MAE: {grade_acc.get('eye_mae')}%
+XRF analyser MAE: {grade_acc.get('xrf_mae')}%
+
+--- TOP TRUCK ANOMALIES ---
+"""
+        for t in top_trucks:
+            ctx += f"Truck {t['truck_id']}: {t['trips']} trips, {t['total_loss_t']}T total loss, {t['zone_mismatches']} zone mismatches, {t['holds']} holds\n"
+
+        ctx += "\n--- EQUIPMENT AT RISK ---\n"
+        for e in at_risk:
+            ctx += f"{e['equipment_id']} ({e['equipment_type']}): health {e['latest_health']}, failure prob {e['peak_failure_prob']}%, component: {e.get('at_risk_component','')}\n"
+
+        ctx += "\n--- SHIFT PERFORMANCE ---\n"
+        for s in shifts:
+            ctx += f"{s['site_id']} {s['shift_type']}: score {s['avg_score']}, utilisation {s['avg_utilisation']}%\n"
+
+        ctx += "\n--- FINANCE (dispatched, approved) ---\n"
+        for f in finance:
+            ctx += f"{f['mineral_type']}: {f['dispatched_mt']}MT dispatched, revenue ₹{f['revenue_inr']}, royalty ₹{f['royalty_inr']}\n"
+
+        ctx += f"\n--- COMPLIANCE ---\n"
+        for key, val in compliance.items():
+            ctx += f"{key}: {json.dumps(val)}\n"
+
+        return ctx
+    except Exception as e:
+        return f"[Error loading mine data: {e}]"
+
+
+SYSTEM_PROMPT = """You are MineOS AI Advisor — the intelligent assistant for MineTrace, a pit-to-dispatch mining traceability platform for Bharat Multi-Mineral Corporation in Odisha, India.
+
+You have access to LIVE mine data provided below. Use it to answer questions accurately with specific numbers. When asked about production, losses, trucks, grades, equipment, compliance, or finance — always reference the real data.
+
+Rules:
+- Give concise, actionable answers (not long essays)
+- Use actual numbers from the data — never invent figures
+- Format currency in Indian style (₹ Lakhs / Crores)
+- If the question is about something not in the data, answer from your general knowledge but mention it's general knowledge
+- Use bullet points for lists
+- For critical issues (theft, equipment failure, compliance deadlines), lead with the urgency
+
+{mine_data}
+"""
+
+
 @app.post("/api/ai/ask")
 def ai_ask(payload: dict):
     q = (payload or {}).get("question", "")
-    # Stubbed response. Swap this body for a Groq call later.
-    return {"question": q,
-            "answer": "AI advisor is in demo mode. Connect a Groq API key to enable "
-                      "live natural-language answers over the mine data.",
-            "stub": True}
+    selected_model = (payload or {}).get("model", OPENROUTER_MODEL)
+    if not q:
+        return {"question": "", "answer": "Please ask a question.", "stub": False}
+
+    if not OPENROUTER_KEY:
+        return _fallback_response(q)
+
+    try:
+        mine_data = _build_mine_context()
+        system = SYSTEM_PROMPT.replace("{mine_data}", mine_data)
+
+        # Try selected model first, then fall back through reliable models
+        models_to_try = [selected_model]
+        for m in FALLBACK_MODELS:
+            if m not in models_to_try:
+                models_to_try.append(m)
+
+        last_error = ""
+        for model in models_to_try:
+            try:
+                resp = _requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_KEY}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "http://localhost:5173",
+                        "X-Title": "MineTrace AI",
+                    },
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": q},
+                        ],
+                        "max_tokens": 1000,
+                        "temperature": 0.3,
+                    },
+                    timeout=30,
+                )
+
+                if resp.status_code == 200:
+                    data = resp.json()
+                    answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    if answer:
+                        model_used = data.get("model", model)
+                        # Show if we fell back to a different model
+                        note = f" (tried {selected_model}, used {model_used})" if model != selected_model else ""
+                        return {
+                            "question": q,
+                            "answer": answer,
+                            "model": model_used + note,
+                            "stub": False
+                        }
+
+                last_error = f"{resp.status_code}: {resp.text[:200]}"
+
+            except Exception as e:
+                last_error = str(e)
+                continue
+
+        # All models failed — use smart fallback with real data
+        fb = _fallback_response(q)
+        fb["note"] = f"All models unavailable ({last_error[:100]}). Showing live data instead."
+        return fb
+
+    except Exception as e:
+        fb = _fallback_response(q)
+        fb["error"] = str(e)
+        return fb
+
+
+def _fallback_response(q):
+    """Smart fallback using real database data when API is unavailable."""
+    ql = q.lower()
+    try:
+        if any(w in ql for w in ['production', 'mined', 'tonnes', 'output']):
+            kpis = _one("SELECT * FROM v_exec_kpis")
+            return {"question": q, "stub": True, "answer":
+                f"Production summary from live data:\n"
+                f"• Total mined: {kpis.get('total_mined_mt')} MT\n"
+                f"• Total dispatched: {kpis.get('total_dispatched_mt')} MT\n"
+                f"• ROM grade (Fe): {kpis.get('rom_grade_avg_fe_pct')}%\n"
+                f"• Fleet utilisation: {kpis.get('fleet_utilisation_pct')}%\n"
+                f"• On-time dispatch: {kpis.get('on_time_dispatch_pct')}%"}
+
+        if any(w in ql for w in ['truck', 'od09', 'anomaly', 'theft', 'loss pattern']):
+            trucks = _rows("SELECT * FROM v_truck_anomalies LIMIT 5")
+            lines = [f"• {t['truck_id']}: {t['total_loss_t']}T loss, {t['holds']} holds, {t['zone_mismatches']} zone mismatches"
+                     for t in trucks]
+            return {"question": q, "stub": True, "answer":
+                f"Top truck anomalies (live data):\n" + "\n".join(lines)}
+
+        if any(w in ql for w in ['crusher', 'leakage', 'waterfall', 'loss', 'revenue']):
+            wf = _one("SELECT * FROM v_waterfall_total")
+            return {"question": q, "stub": True, "answer":
+                f"Revenue leakage waterfall (live data):\n"
+                f"• Pit: {wf.get('pit_mt')} MT\n"
+                f"• Crusher: {wf.get('crusher_mt')} MT\n"
+                f"• Stockyard: {wf.get('stockyard_mt')} MT\n"
+                f"• Dispatch: {wf.get('dispatch_mt')} MT\n"
+                f"• Biggest leak: Crusher→Stockyard at {wf.get('loss_crusher_stockyard_pct')}%"}
+
+        if any(w in ql for w in ['maintenance', 'equipment', 'dz-01', 'ex-07', 'failure']):
+            equip = _rows("SELECT * FROM v_equipment_at_risk")
+            lines = [f"• {e['equipment_id']} ({e['equipment_type']}): health {e['latest_health']}, "
+                     f"failure prob {e['peak_failure_prob']}% — {e.get('at_risk_component','')}"
+                     for e in equip]
+            return {"question": q, "stub": True, "answer":
+                f"Equipment at risk (live data):\n" + "\n".join(lines)}
+
+        if any(w in ql for w in ['compliance', 'ibm', 'royalty', 'deadline']):
+            cp = os.path.join(os.path.dirname(MASTER), "raw", "compliance_deadlines.json")
+            comp = json.load(open(cp)) if os.path.exists(cp) else {}
+            lines = []
+            for k, v in comp.items():
+                status = v.get('status', '')
+                due = v.get('due', v.get('next_due', ''))
+                lines.append(f"• {k.replace('_',' ')}: {status} (due: {due})")
+            return {"question": q, "stub": True, "answer":
+                f"Compliance status (live data):\n" + "\n".join(lines)}
+
+        if any(w in ql for w in ['grade', 'camera', 'xrf', 'lims', 'accuracy']):
+            acc = _one("SELECT * FROM v_grade_accuracy")
+            return {"question": q, "stub": True, "answer":
+                f"Grade measurement accuracy (live data):\n"
+                f"• AI Camera MAE: {acc.get('camera_mae')}% (vs LIMS)\n"
+                f"• Eye estimate MAE: {acc.get('eye_mae')}%\n"
+                f"• XRF analyser MAE: {acc.get('xrf_mae')}%\n"
+                f"• XRF is most accurate, eye estimate least reliable"}
+
+        return {"question": q, "stub": True, "answer":
+            "I can answer questions about production, trucks, grades, equipment, "
+            "compliance, revenue leakage, and shift performance. "
+            "Try asking: 'Which truck is losing the most material?' or "
+            "'What is the crusher to stockyard loss?'"}
+    except Exception as e:
+        return {"question": q, "stub": True, "answer": f"Error querying data: {e}"}
 
 
 if __name__ == "__main__":
