@@ -8,7 +8,7 @@ calibrated to the MineTrace pitch deck headline figures.
 from datetime import date
 
 # --------------------------------------------------------------------------
-# SCALE KNOBS  -- change these to go from a demo slice to the full spec
+# SCALE KNOBS  -- change these to go from a demo slice to the full specification
 # --------------------------------------------------------------------------
 # Full spec (per teammate doc): 180 days, 45 trucks/site, ~15 trips/truck/day
 #   -> ~364,500 trips, ~500MB.  Set SCALE_PROFILE = "full" for that.
